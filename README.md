@@ -5,7 +5,7 @@ Expression Finder
 
 # Why
 
-Sometimes you have a number and wonder if there is a closed-form expression for it.
+Sometimes you have a decimal number and wonder if there is a closed-form expression for it.
 
 # How
 
@@ -35,6 +35,7 @@ To run in CLI:
 - [https://isc.carma.newcastle.edu.au](https://isc.carma.newcastle.edu.au)
 - [https://oeis.org](https://oeis.org)
 - [https://xkcd.com/1047](https://xkcd.com/1047)
+- [https://katex.org](https://katex.org)
 
 # Performance
 
