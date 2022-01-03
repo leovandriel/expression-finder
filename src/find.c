@@ -69,9 +69,20 @@ char *latex(ex_iterator *iter, char *buffer, bool parens) {
     return buffer;
 }
 
+void report(ex_iterator *iter, double value) {
+    char latex_buffer[1000];
+#ifdef __EMSCRIPTEN__
+    *(latex(iter, latex_buffer, false)) = '\0';
+    EM_ASM({ onResult(UTF8ToString($0, $1), $2); }, latex_buffer, strlen(latex_buffer), value);
+#else
+    char *expression = ex_iterator_str(iter);
+    printf("result: %s = %.20f\n", expression, value);
+#endif
+}
+
 int next(char *target_string, ex_iterator *stack, size_t max) {
     char *dotat = strchr(target_string, '.');
-    int decimals = dotat ? strlen(target_string) - (dotat - target_string) - 1 : 0;
+    int decimals = dotat ? strlen(target_string) - (dotat - target_string) - 1 : 1;
     if (decimals > 15) {
         // 64-bit double doesn't get more than 15 digits accurately
         decimals = 15;
@@ -80,7 +91,6 @@ int next(char *target_string, ex_iterator *stack, size_t max) {
     double round_factor = pow(10, decimals);
     double target_value = strtod(target_string, NULL);
     long long int round_target = llround(target_value * round_factor);
-    char latex_buffer[1000];
     if (!stack->root) {
         ex_init(stack, false);
     }
@@ -89,13 +99,7 @@ int next(char *target_string, ex_iterator *stack, size_t max) {
         if (diff < max_diff) {
             double scaled = stack->value * round_factor;
             if (round_target == (long long int)round(scaled) || round_target == (long long int)trunc(scaled)) {
-#ifdef __EMSCRIPTEN__
-                *(latex(stack->child[0], latex_buffer, false)) = '\0';
-                EM_ASM({ onResult(UTF8ToString($0, $1), $2); }, latex_buffer, strlen(latex_buffer), stack->value);
-#else
-                char *expression = ex_iterator_str(stack);
-                printf("result: %s = %.20f\n", expression, stack->value);
-#endif
+                report(stack->child[0], stack->value);
                 return 1;
             }
         }
