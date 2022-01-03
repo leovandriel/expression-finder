@@ -4,7 +4,7 @@
 #include <emscripten.h>
 #endif
 
-char *latex(ex_iterator *iter, char *buffer, bool parens) {
+char *latex(ex_iterator *iter, char *buffer, int prec) {
     *(buffer++) = ' ';
     if (iter->volume == 0) {
         switch (iter->symbol) {
@@ -15,50 +15,55 @@ char *latex(ex_iterator *iter, char *buffer, bool parens) {
         switch(iter->symbol) {
             case 'l': strncpy(buffer, "\\ln(", 4); buffer += 4; break;
             case 'c': strncpy(buffer, "\\cos(", 5); buffer += 5; break;
-            default: *(buffer++) = iter->symbol;
+            case '-': *(buffer++) = iter->symbol; break;
+            default: *(buffer++) = '?';
         }
-        buffer = latex(iter->child[0], buffer, iter->symbol != 'l');
+        buffer = latex(iter->child[0], buffer, iter->symbol == '-' ? 5 : 0);
         switch(iter->symbol) {
             case 'l': case 'c': *(buffer++) = ')'; break;
         }
     } else {
         switch(iter->symbol) {
             case '+':
-                if (parens) *(buffer++) = '(';
-                buffer = latex(iter->child[0], buffer, true);
+                if (prec > 2) *(buffer++) = '(';
+                buffer = latex(iter->child[0], buffer, 2);
                 if (iter->child[1]->symbol != '-') {
                     *(buffer++) = iter->symbol;
                 }
-                buffer = latex(iter->child[1], buffer, true);
-                if (parens) *(buffer++) = ')';
+                buffer = latex(iter->child[1], buffer, 2);
+                if (prec > 2) *(buffer++) = ')';
                 break;
             case '*':
-                buffer = latex(iter->child[0], buffer, false);
+                if (prec > 3) *(buffer++) = '(';
+                buffer = latex(iter->child[0], buffer, 3);
                 strncpy(buffer, "\\cdot", 5); buffer += 5;
-                buffer = latex(iter->child[1], buffer, false);
+                buffer = latex(iter->child[1], buffer, 3);
+                if (prec > 3) *(buffer++) = ')';
                 break;
             case '/':
                 strncpy(buffer, "\\frac{", 6); buffer += 6;
-                buffer = latex(iter->child[0], buffer, false);
+                buffer = latex(iter->child[0], buffer, 0);
                 strncpy(buffer, "}{", 2); buffer += 2;
-                buffer = latex(iter->child[1], buffer, false);
+                buffer = latex(iter->child[1], buffer, 0);
                 *(buffer++) = '}';
                 break;
             case 'r':
                 strncpy(buffer, "\\sqrt", 5); buffer += 5;
                 if (iter->child[1]->value != 2) {
                     *(buffer++) = '[';
-                    buffer = latex(iter->child[1], buffer, false);
+                    buffer = latex(iter->child[1], buffer, 0);
                     *(buffer++) = ']';
                 }
                 *(buffer++) = '{';
-                buffer = latex(iter->child[0], buffer, false);
+                buffer = latex(iter->child[0], buffer, 0);
                 *(buffer++) = '}';
                 break;
             case '^':
-                buffer = latex(iter->child[0], buffer, true);
+                if (prec > 4) *(buffer++) = '(';
+                buffer = latex(iter->child[0], buffer, 4);
+                if (prec > 4) *(buffer++) = ')';
                 strncpy(buffer, "^{", 2); buffer += 2;
-                buffer = latex(iter->child[1], buffer, true);
+                buffer = latex(iter->child[1], buffer, 4);
                 *(buffer++) = '}';
                 break;
             default:
@@ -72,7 +77,7 @@ char *latex(ex_iterator *iter, char *buffer, bool parens) {
 void report(ex_iterator *iter, double value) {
     char latex_buffer[1000];
 #ifdef __EMSCRIPTEN__
-    *(latex(iter, latex_buffer, false)) = '\0';
+    *(latex(iter, latex_buffer, 0)) = '\0';
     EM_ASM({ onResult(UTF8ToString($0, $1), $2); }, latex_buffer, strlen(latex_buffer), value);
 #else
     char *expression = ex_iterator_str(iter);
