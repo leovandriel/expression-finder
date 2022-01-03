@@ -139,7 +139,7 @@ bool ex_eval_unary(ex_iterator *iter) {
             case 1: { // logarithm
                 if ((iter->all || (
                     symbol != '^' && symbol != 'r'
-                    && (symbol != '*' || (child->child[0]->symbol != 'e' && child->child[1]->symbol != 'e'))
+                    && ((symbol != '*' && symbol != '/') || (child->child[0]->symbol != 'e' && child->child[1]->symbol != 'e'))
                     && (symbol != '/' || child->child[0]->value != 1.)
                 ))
                     && value > 0. && value != 1.
@@ -156,7 +156,7 @@ bool ex_eval_unary(ex_iterator *iter) {
                 if ((iter->all || (
                     value != M_PI / 3.
                 ))
-                    && value > 0. && value < M_PI / 2.
+                    && value > 0.001 && value < M_PI / 2.
                 ) {
                     iter->value = cos(value);
                     iter->symbol = 'c';
@@ -200,7 +200,7 @@ bool ex_eval_binary(ex_iterator *iter) {
                     && (symbol0 != symbol1 || (symbol0 != '-' && symbol0 != 'l' && symbol0 != '+'
                         && (symbol0 != '/' || child0->child[1]->value != child1->child[1]->value)
                     ))
-                    && (symbol1 != '+' || value0 < child1->child[0]->value)
+                    && (symbol1 != '+' || ex_compare(child0, child1->child[0]) > 0)
                     && (symbol1 != '*' || (value0 != child1->child[0]->value && value0 != child1->child[1]->value))
                 ))
                     && value0 != -value1
@@ -221,7 +221,7 @@ bool ex_eval_binary(ex_iterator *iter) {
                     && ((symbol0 != symbol1) || symbol0 != '*')
                     && (symbol1 != '*' || (value0 != child1->child[0]->value && value0 != child1->child[1]->value))
                     && (symbol1 != '^' || value0 != child1->child[0]->value)
-                    && (symbol1 != '*' || value0 < child1->child[0]->value)
+                    && (symbol1 != '*' || ex_compare(child0, child1->child[0]) > 0)
                     && value0 != 1. && value0 != -1.
                     && value1 != 1. && value1 != -1.
                 ))) {
@@ -236,7 +236,6 @@ bool ex_eval_binary(ex_iterator *iter) {
                     value0 != value1
                     && symbol0 != '-' && symbol1 != '-'
                     && symbol0 != '/' && symbol1 != '/'
-                    // && (symbol0 != symbol1 || symbol0 != '*')
                     && (symbol1 != '*' || (value0 != child1->child[0]->value && value0 != child1->child[1]->value))
                     && (symbol0 != '*' || (value1 != child0->child[0]->value && value1 != child0->child[1]->value))
                     && (symbol0 != '+' || (value1 != child0->child[0]->value && value1 != child0->child[1]->value))
@@ -254,6 +253,9 @@ bool ex_eval_binary(ex_iterator *iter) {
                         child0->child[0]->value != child1->child[0]->value
                         && child0->child[0]->value != child1->child[1]->value
                     ))
+                    && ((symbol1 != '^' && symbol1 != 'r') || value0 != 1.)
+                    && (symbol0 != '^' || symbol1 != '^' || child0->child[0]->value != child1->child[0]->value)
+                    && (symbol0 != '^' || (child0->child[0]->value != value1))
                     && (symbol1 != 'r' || child1->child[1]->value != 2. || value0 != child1->child[0]->value)
                     && value1 != 1. && value1 != -1.
                 ))) {
@@ -267,13 +269,16 @@ bool ex_eval_binary(ex_iterator *iter) {
                 if ((iter->all || (
                     symbol0 != '^' && symbol0 != 'r'
                     && value0 != 1.
+                    && (symbol0 != '/' || child0->child[0]->value != 1.)
                 ))
                     && value0 > 0. && value1 > 1. && ex_is_round(value1)
                 ) {
                     iter->value = value1 == 2. ? sqrt(value0) : pow(value0, 1. / value1);
-                    iter->symbol = 'r';
-                    iter->arity = 2;
-                    return true;
+                    if (iter->all || !ex_is_round(iter->value)) {
+                        iter->symbol = 'r';
+                        iter->arity = 2;
+                        return true;
+                    }
                 }
             } break;
             case 4: { // power
@@ -282,11 +287,11 @@ bool ex_eval_binary(ex_iterator *iter) {
                     && (symbol0 != 'e' || symbol1 != 'l')
                     && (symbol0 != 'e' || symbol1 != '-' || child1->child[0]->symbol != 'l')
                     && (symbol1 != 'l' || value0 <= child1->child[0]->value)
+                    && (symbol0 != '/' || child0->child[0]->value != 1.)
                     && value0 != 1. && value0 != -1. && value1 != 1. && value1 != -1.
                     && !ex_is_round(1. / value1)
                 ))
-                    && value0 > 0. //1e-3 && value0 < 1e3
-                    && value1 > 0. //&& value1 * log(value0) < 10
+                    && value0 > 0.
                 ) {
                     iter->value = pow(value0, value1);
                     iter->symbol = '^';

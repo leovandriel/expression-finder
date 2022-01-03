@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
             ht_set(&table, key, expression);
         }
     }
-    for (ex_init(stack, false); ex_next(stack) && stack->volume < size + 1;) {
+    for (ex_init(stack, false); ex_next(stack) && stack->volume < size + 2;) {
         char *key = ex_double_str(stack->value);
         // char *expression = ex_iterator_str(stack);
         // if (!strcmp(expression, ""))
