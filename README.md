@@ -18,14 +18,16 @@ It combines:
 
 # Usage
 
-To run in a browser:
+View on the web: [https://ex.leovandriel.com](https://ex.leovandriel.com)
+
+Run locally:
 
     ./bin/serve.sh
     open http://localhost:8000
 
-To build for web, install [Emscripten](https://emscripten.org) and run `./bin/build.sh`.
+Build for web, install [Emscripten](https://emscripten.org) and run `./bin/build.sh`.
 
-To run in CLI:
+Run in CLI:
 
 	./bin/find.sh [number]
 
