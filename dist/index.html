@@ -22,7 +22,7 @@
           <h1>Math Expression Finder</h1>
           <form onsubmit="onSearch();return false">
             <div class="form-group">
-              <input class="form-control my-1" ctype="text" name="target" id="target" placeholder="1.6180339" oninput="onChange()" />
+              <input class="form-control my-1" type="text" name="target" id="target" placeholder="1.6180339" oninput="onChange()" autofocus />
               <button class="btn btn-primary w-100 my-1" type="button" id="search" onclick="onSearch()">
                 Find Expression
               </button>
@@ -44,8 +44,9 @@
       let index = 0
       let dataPtr = null
       let dataHeap = null
-      let current = ''
+      let current = null
       let count = 0
+      let busy = false
       Module.onRuntimeInitialized = () => {
         next = Module.cwrap('next', 'number', ['string', 'number'])
       }
@@ -58,7 +59,8 @@
         info('Equals ' + value)
         katex.render(latex, span, { throwOnError: false })
       }
-      function setState(busy) {
+      function setState(b) {
+        busy = b
         const search = document.getElementById('search')
         search.disabled = busy ? 'disabled' : ''
         const spinner = document.getElementById('spinner')
@@ -72,7 +74,7 @@
       function onChange() {
         const target = document.getElementById('target')
         const search = document.getElementById('search')
-        search.disabled = current == target.value ? 'disabled' : ''
+        search.disabled = current == target.value && busy ? 'disabled' : ''
         search.innerHTML = current == target.value ? 'Find Another' : 'Find Expression'
       }
       function search(target) {
