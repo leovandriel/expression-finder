@@ -74,14 +74,14 @@ char *latex(ex_iterator *iter, char *buffer, int prec) {
     return buffer;
 }
 
-void report(ex_iterator *iter, double value) {
+void report(ex_iterator *iter, double value, int size) {
     char latex_buffer[1000];
 #ifdef __EMSCRIPTEN__
     *(latex(iter, latex_buffer, 0)) = '\0';
-    EM_ASM({ onResult(UTF8ToString($0, $1), $2); }, latex_buffer, strlen(latex_buffer), value);
+    EM_ASM({ onResult(UTF8ToString($0, $1), $2, $3); }, latex_buffer, strlen(latex_buffer), value, size);
 #else
     char *expression = ex_iterator_str(iter);
-    printf("result: %s = %.20f\n", expression, value);
+    printf("result: %s = %.20f (%i)\n", expression, value, size);
 #endif
 }
 
@@ -104,7 +104,7 @@ int next(char *target_string, ex_iterator *stack, size_t max) {
         if (diff < max_diff) {
             double scaled = stack->value * round_factor;
             if (round_target == (long long int)round(scaled) || round_target == (long long int)trunc(scaled)) {
-                report(stack->child[0], stack->value);
+                report(stack->child[0], stack->value, stack->volume + 1);
                 return 1;
             }
         }

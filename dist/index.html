@@ -29,7 +29,7 @@
             </div>
           </form>
           <div id="output" style="display: none">
-            <div class="justify-content-center border border-secondary rounded p-2 d-flex my-1">
+            <div class="justify-content-center border border-secondary rounded p-2 d-flex my-1" id="outputbox">
               <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true" id="spinner" style="display: none"></span>
               <span id="result"></span>
             </div>
@@ -46,7 +46,7 @@
       let dataHeap = null
       let current = null
       let count = 0
-      let busy = false
+      let busy = ''
       Module.onRuntimeInitialized = () => {
         next = Module.cwrap('next', 'number', ['string', 'number'])
       }
@@ -54,20 +54,42 @@
         const element = document.getElementById('info')
         element.innerHTML = text
       }
-      function onResult(latex, value) {
+      function setQuality(quality) {
+        const box = document.getElementById('outputbox')
+        box.classList.remove('border-success', 'border-secondary', 'border-danger', 'border-warning')
+        if (quality > 2) {
+          box.classList.add('border-success')
+          return 'very likely'
+        } if (quality > 1) {
+          box.classList.add('border-secondary')
+          return 'likely'
+        } else if (quality > 0) {
+          box.classList.add('border-warning')
+          return 'maybe'
+        } else {
+          box.classList.add('border-danger')
+          return 'unlikely'
+        }
+      }
+      function onResult(latex, value, size) {
+        const decimals = ((busy.match(/[1-9][0-9.]+/) || [])[0] || '').replace('.', '').length
+        const complexity = (size - 1) * 0.83
+        const quality = setQuality(decimals - complexity)
         const span = document.getElementById('result')
-        info('Equals ' + value)
+        info('Equals ' + value + ' (' + quality + ')')
         katex.render(latex, span, { throwOnError: false })
       }
-      function setState(b) {
-        busy = b
+      function setState(target) {
+        busy = target
         const search = document.getElementById('search')
         search.disabled = busy ? 'disabled' : ''
         const spinner = document.getElementById('spinner')
         spinner.style.display = busy ? 'inherit' : 'none'
         const output = document.getElementById('output')
         output.style.display = 'inherit'
-        if (!busy) {
+        if (busy) {
+          setQuality(1.5)
+        } else {
           search.innerHTML = 'Find Another'
         }
       }
@@ -96,7 +118,7 @@
         function loop() {
           if (mark == index) {
             if (next(target, dataHeap.byteOffset, max)) {
-              setState(false)
+              setState('')
             } else {
               count += max
               info('Evaluated ' + Math.round(count / 1000000) + 'M expressions')
@@ -113,7 +135,7 @@
           target.value = '1.6180339'
         }
         span.innerHTML = ''
-        setState(true)
+        setState(target.value)
         info('')
         setTimeout(function() {
           search(target.value)

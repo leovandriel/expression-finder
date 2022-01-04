@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
         }
         printf("%s, total, iterations: %lu\n", type, total);
         printf("%s, total, unique: %lu (%lu%%)\n", type, table.count, 100 * table.count / total);
+        ht_free(&table);
     }
-    ht_free(&table);
     return 0;
 }
