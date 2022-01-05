@@ -87,14 +87,6 @@ char *ex_iterator_str(ex_iterator *iter) {
     return ex_buffer;
 }
 
-char ex_number_buffer[1000];
-
-char *ex_double_str(double d) {
-    memset(ex_number_buffer, 0, 1000);
-    snprintf(ex_number_buffer, 999, "%.9e", d);
-    return ex_number_buffer;
-}
-
 bool ex_is_round(double value) {
     return floor(value) == value;
 }

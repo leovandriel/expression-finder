@@ -1,13 +1,15 @@
 #include "expression.h"
 #include "table.h"
+#include "util.h"
 
 int main(int argc, char *argv[]) {
     int size = 7;
     ex_iterator stack[100];
     ht_table table;
     ht_init(&table, 1000000);
+    char buffer[100];
     for (ex_init(stack, true); ex_next(stack) && stack->volume < size;) {
-        char *key = ex_double_str(stack->value);
+        char *key = ex_double_str(stack->value, buffer);
         // char *expression = ex_iterator_str(stack);
         // if (!strcmp(expression, ""))
         //     printf("all: %s = %s\n", expression, key);
@@ -17,7 +19,7 @@ int main(int argc, char *argv[]) {
         }
     }
     for (ex_init(stack, false); ex_next(stack) && stack->volume < size + 2;) {
-        char *key = ex_double_str(stack->value);
+        char *key = ex_double_str(stack->value, buffer);
         // char *expression = ex_iterator_str(stack);
         // if (!strcmp(expression, ""))
         //     printf("opt: %s = %s\n", expression, key);
