@@ -99,9 +99,31 @@ bool ex_is_round(double value) {
     return floor(value) == value;
 }
 
-bool ex_is_primitive(double value) {
-    for (const double *p = primitives, *e = p + primitive_max; p <= e; p++) {
-        if (value == *p || value == -*p) {
+unsigned char primes[] = { 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197, 199, 211, 223, 227, 229, 233, 239, 241, 251 };
+
+bool ex_is_primish(double value) {
+    if (value == M_PI || value == M_E) {
+        return false;
+    }
+    double f = floor(value);
+    if (f != value) {
+        return true;
+    }
+    double a = fabs(f);
+    if (a < 7.) {
+        return false;
+    }
+    if (a > 256.) {
+        return true;
+    }
+    int t = (int)a, left = 0, right = sizeof(primes) - 1;
+    while (left <= right) {
+        int mid = floor((left + right) / 2);
+        if (primes[mid] < t) {
+            left = mid + 1;
+        } else if (primes[mid] > t) {
+            right = mid - 1;
+        } else {
             return true;
         }
     }
@@ -201,12 +223,13 @@ bool ex_eval_binary(ex_iterator *iter) {
                         && (symbol0 != '/' || child0->child[1]->value != child1->child[1]->value)
                     ))
                     && (symbol1 != '+' || ex_compare(child0, child1->child[0]) > 0)
+                    && (symbol1 != '+' || ex_is_primish(value0 + child1->child[0]->value))
                     && (symbol1 != '*' || (value0 != child1->child[0]->value && value0 != child1->child[1]->value))
                 ))
                     && value0 != -value1
                 ) {
                     iter->value = value0 + value1;
-                    if (iter->all || !ex_is_primitive(iter->value)) {
+                    if (iter->all || (value1 == 125 || value1 == 216 || value1 == 225 || value1 == 243 || ex_is_primish(iter->value))) {
                         iter->symbol = '+';
                         iter->arity = 2;
                         return true;
@@ -220,7 +243,7 @@ bool ex_eval_binary(ex_iterator *iter) {
                     && symbol0 != '/' && symbol1 != '/'
                     && ((symbol0 != symbol1) || symbol0 != '*')
                     && (symbol1 != '*' || (value0 != child1->child[0]->value && value0 != child1->child[1]->value))
-                    && (symbol1 != '^' || value0 != child1->child[0]->value)
+                    && ((symbol1 != '^' && symbol1 != 'r') || value0 != child1->child[0]->value)
                     && (symbol1 != '*' || ex_compare(child0, child1->child[0]) > 0)
                     && value0 != 1. && value0 != -1.
                     && value1 != 1. && value1 != -1.
@@ -253,10 +276,13 @@ bool ex_eval_binary(ex_iterator *iter) {
                         child0->child[0]->value != child1->child[0]->value
                         && child0->child[0]->value != child1->child[1]->value
                     ))
-                    && ((symbol1 != '^' && symbol1 != 'r') || value0 != 1.)
+                    && ((symbol1 != '^' && symbol1 != 'r') || value0 != child1->child[0]->value)
+                    && ((symbol0 != '^') || value1 != child0->child[0]->value)
+                    && (symbol1 != '^' || value0 != 1.)
                     && (symbol0 != '^' || symbol1 != '^' || child0->child[0]->value != child1->child[0]->value)
-                    && (symbol0 != '^' || (child0->child[0]->value != value1))
+                    && (symbol0 != '^' || child0->child[0]->value != value1)
                     && (symbol1 != 'r' || child1->child[1]->value != 2. || value0 != child1->child[0]->value)
+                    && (symbol0 != 'r' || child0->child[1]->value != 2. || value1 != child0->child[0]->value)
                     && value1 != 1. && value1 != -1.
                 ))) {
                     iter->value = value0 / value1;
@@ -287,6 +313,7 @@ bool ex_eval_binary(ex_iterator *iter) {
                     && (symbol0 != 'e' || symbol1 != 'l')
                     && (symbol0 != 'e' || symbol1 != '-' || child1->child[0]->symbol != 'l')
                     && (symbol1 != 'l' || value0 <= child1->child[0]->value)
+                    && (symbol1 != '-' || child1->child[0]->symbol != 'l' || value0 <= child1->child[0]->child[0]->value)
                     && (symbol0 != '/' || child0->child[0]->value != 1.)
                     && value0 != 1. && value0 != -1. && value1 != 1. && value1 != -1.
                     && !ex_is_round(1. / value1)
