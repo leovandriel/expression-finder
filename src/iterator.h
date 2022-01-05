@@ -1,5 +1,5 @@
-#ifndef EXPRESSION_H
-#define EXPRESSION_H
+#ifndef EX_ITERATOR_H
+#define EX_ITERATOR_H
 
 #include <math.h>
 #include <stdbool.h>

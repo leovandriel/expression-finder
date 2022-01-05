@@ -1,5 +1,5 @@
-#ifndef TABLE_H
-#define TABLE_H
+#ifndef EX_TABLE_H
+#define EX_TABLE_H
 
 #include <stdlib.h>
 #include <string.h>

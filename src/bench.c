@@ -1,6 +1,6 @@
 #include <time.h>
 
-#include "expression.h"
+#include "iterator.h"
 
 int main(int argc, char *argv[]) {
     ex_iterator stack[100];
