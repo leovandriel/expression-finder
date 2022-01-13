@@ -122,6 +122,38 @@ bool ex_is_primish(double value) {
     return false;
 }
 
+bool ex_is_product_of_value(ex_iterator *iter, double value) {
+    if (fabs(iter->value - value) < 1e-12) {
+        return true;
+    }
+    if (iter->symbol == '*' || iter->symbol == '/') {
+        if (ex_is_product_of_value(iter->child[0], value) || ex_is_product_of_value(iter->child[1], value)) {
+            return true;
+        }
+    } else if (iter->symbol == '-' || iter->symbol == '^' || iter->symbol == 'r') {
+        if (ex_is_product_of_value(iter->child[0], value)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool ex_is_product_of_symbol(ex_iterator *iter, char symbol) {
+    if (iter->symbol == symbol) {
+        return true;
+    }
+    if (iter->symbol == '*') {
+        if (ex_is_product_of_symbol(iter->child[0], symbol) || ex_is_product_of_symbol(iter->child[1], symbol)) {
+            return true;
+        }
+    } else if (iter->symbol == '-' || iter->symbol == '/') {
+        if (ex_is_product_of_symbol(iter->child[0], symbol)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool ex_eval_primitive(ex_iterator *iter) {
     if (iter->symbol_index++ != primitive_max) {
         iter->value = primitives[iter->symbol_index];
@@ -153,7 +185,7 @@ bool ex_eval_unary(ex_iterator *iter) {
             case 1: { // logarithm
                 if ((iter->all || (
                     symbol != '^' && symbol != 'r'
-                    && ((symbol != '*' && symbol != '/') || (child->child[0]->symbol != 'e' && child->child[1]->symbol != 'e'))
+                    && !ex_is_product_of_value(iter, M_E)
                     && (symbol != '/' || child->child[0]->value != 1.)
                 ))
                     && value > 0. && value != 1.
@@ -221,7 +253,7 @@ bool ex_eval_binary(ex_iterator *iter) {
                     && value0 != -value1
                 ) {
                     iter->value = value0 + value1;
-                    if (iter->all || (value1 == 125 || value1 == 216 || value1 == 225 || value1 == 243 || ex_is_primish(iter->value))) {
+                    if (iter->all || (value1 == 125. || value1 == 216. || value1 == 225. || fabs(value1) == 243. || ex_is_primish(iter->value))) {
                         iter->symbol = '+';
                         iter->arity = 2;
                         return true;
@@ -302,7 +334,9 @@ bool ex_eval_binary(ex_iterator *iter) {
             case 4: { // power
                 if ((iter->all || (
                     symbol0 != '^' && symbol0 != 'r'
+                    && (symbol0 != '/' || symbol1 != '-')
                     && (symbol0 != 'e' || symbol1 != 'l')
+                    && (symbol0 != 'e' || !ex_is_product_of_symbol(child1, 'l'))
                     && (symbol0 != 'e' || symbol1 != '-' || child1->child[0]->symbol != 'l')
                     && (symbol1 != 'l' || value0 <= child1->child[0]->value)
                     && (symbol1 != '-' || child1->child[0]->symbol != 'l' || value0 <= child1->child[0]->child[0]->value)
