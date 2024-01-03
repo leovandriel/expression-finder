@@ -46,8 +46,6 @@ void ex_init_size(int volume, ex_iterator *iter, bool all) {
     ex_init_in(volume, iter, all, false);
 }
 
-char ex_buffer[1000];
-
 char *ex_iterator_str_in(char *buffer, ex_iterator *iter) {
     if (iter->volume == 0) {
         switch (iter->symbol) {
@@ -79,12 +77,11 @@ char *ex_iterator_str_in(char *buffer, ex_iterator *iter) {
     }
 }
 
-char *ex_iterator_str(ex_iterator *iter) {
+void ex_iterator_str(char *buffer, ex_iterator *iter) {
     if (iter->root) {
         iter = iter->child[0];
     }
-    *(ex_iterator_str_in(ex_buffer, iter)) = '\0';
-    return ex_buffer;
+    *(ex_iterator_str_in(buffer, iter)) = '\0';
 }
 
 bool ex_is_round(double value) {

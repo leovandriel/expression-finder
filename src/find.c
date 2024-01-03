@@ -80,7 +80,8 @@ void report(ex_iterator *iter, double value, int size) {
     *(latex(iter, latex_buffer, 0)) = '\0';
     EM_ASM({ onResult(UTF8ToString($0, $1), $2, $3); }, latex_buffer, strlen(latex_buffer), value, size);
 #else
-    char *expression = ex_iterator_str(iter);
+    char expression[100];
+    ex_iterator_str(expression, iter);
     printf("result: %s = %.20f (%i)\n", expression, value, size);
 #endif
 }

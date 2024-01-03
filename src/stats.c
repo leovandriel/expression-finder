@@ -7,7 +7,7 @@ int main(int argc, char *argv[]) {
     ex_iterator stack[100];
     ht_table table;
     bool all;
-    char buffer[100];
+    char key[100];
     for (int i = 0; i < 2; i++) {
         all = !i;
         const char *type = all ? "all" : "opt";
@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
         for (int i = 0; i < size; i++) {
             size_t count = 0;
             for (ex_init_size(i, stack, all); ex_next(stack);) {
-                char *key = ex_double_str(stack->value, buffer);
+                ex_double_str(key, stack->value);
                 if (!ht_get(&table, key)) {
                     ht_set(&table, key, "");
                 }

@@ -3,9 +3,8 @@
 
 #include <stdio.h>
 
-char *ex_double_str(double d, char *buffer) {
+void ex_double_str(char *buffer, double d) {
     sprintf(buffer, "%.9e", d);
-    return buffer;
 }
 
 #endif
