@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define WARN_COLLISION 10
 typedef struct ht_entry {
     struct ht_entry *next;
     char *key;
@@ -86,9 +87,18 @@ char *ht_copy(char *s) {
     return p;
 }
 
+int collision_flag = 0;
+
 ht_entry *ht_lookup(ht_table *table, char *key) {
 	size_t hash = ht_hash(table, key);
+	int count = 0;
     for (ht_entry *entry = table->data[hash]; entry; entry = entry->next) {
+#if WARN_COLLISION
+		if (++count >= WARN_COLLISION && !collision_flag) {
+			fprintf(stderr, "WARNING: hash collision over: %d\n", count);
+			collision_flag = 1;
+		}
+#endif
         if (!strcmp(key, entry->key)) {
             return entry;
         }
