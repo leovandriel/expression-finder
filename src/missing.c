@@ -10,7 +10,7 @@ int main(int argc, char *argv[]) {
     char key[100];
     char expression[100];
     for (ex_init(stack, true); ex_next(stack) && stack->volume < size;) {
-        ex_double_str(key, stack->value);
+        ex_double_str(key, stack->value, 9);
         // ex_iterator_str(expression, stack);
         // if (!strcmp(expression, ""))
         //     printf("all: %s = %s\n", expression, key);
@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
         }
     }
     for (ex_init(stack, false); ex_next(stack) && stack->volume < size + 2;) {
-        ex_double_str(key, stack->value);
+        ex_double_str(key, stack->value, 9);
         // ex_iterator_str(expression, stack);
         // if (!strcmp(expression, ""))
         //     printf("opt: %s = %s\n", expression, key);

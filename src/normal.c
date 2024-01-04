@@ -10,7 +10,7 @@ int main(int argc, char *argv[]) {
     for (ex_init(stack, false); ex_next(stack) && stack->volume < size;) {
         if (!isnormal(stack->value)) {
             ex_iterator_str(expression, stack);
-            ex_double_str(key, stack->value);
+            ex_double_str(key, stack->value, 9);
             printf("collision: %s is not normal (%s)\n", expression, key);
         }
     }

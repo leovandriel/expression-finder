@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
         for (int i = 0; i < size; i++) {
             size_t count = 0;
             for (ex_init_size(i, stack, all); ex_next(stack);) {
-                ex_double_str(key, stack->value);
+                ex_double_str(key, stack->value, 9);
                 if (!ht_get(&table, key)) {
                     ht_set(&table, key, "");
                 }
