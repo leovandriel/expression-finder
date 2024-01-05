@@ -20,8 +20,9 @@ It combines:
 
 View on the web: [https://ex.leovandriel.com](https://ex.leovandriel.com)
 
-Run locally:
+Run locally, first install `emscripten`:
 
+    ./bin/build.sh
     ./bin/serve.sh
     open http://localhost:8000
 
