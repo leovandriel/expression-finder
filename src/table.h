@@ -5,7 +5,8 @@
 #include <string.h>
 #include <stdio.h>
 
-#define WARN_COLLISION 10
+#define WARN_BIN 20
+#define WARN_CAP 0
 typedef struct ht_entry {
     struct ht_entry *next;
     char *key;
@@ -88,18 +89,26 @@ char *ht_copy(char *s) {
     return p;
 }
 
-int collision_flag = 0;
+int flag_bin = 0;
+int flag_cap = 0;
 
 ht_entry *ht_lookup(ht_table *table, char *key) {
 	size_t hash = ht_hash(table, key);
-	int count = 0;
+	size_t count = 0;
     for (ht_entry *entry = table->data[hash]; entry; entry = entry->next) {
-#if WARN_COLLISION
-		if (++count >= WARN_COLLISION && !collision_flag) {
-			fprintf(stderr, "WARNING: hash collision over: %d\n", count);
-			collision_flag = 1;
+#if WARN_BIN
+		if (++count >= WARN_BIN && !flag_bin) {
+			fprintf(stderr, "WARNING: bin size over: %lu\n", count);
+			flag_bin = 1;
 		}
 #endif
+#if WARN_CAP
+		if (table->count / table->dsize > WARN_CAP && !flag_cap) {
+			fprintf(stderr, "WARNING: capacity over: %lu%%\n", 100 * table->count / table->dsize);
+			flag_cap = 1;
+		}
+#endif
+
         if (!strcmp(key, entry->key)) {
             return entry;
         }
