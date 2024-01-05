@@ -5,8 +5,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#define WARN_BIN 20
-#define WARN_CAP 0
+#define WARN_CAPACITY_FACTOR 10
 typedef struct ht_entry {
     struct ht_entry *next;
     char *key;
@@ -17,6 +16,7 @@ typedef struct ht_table {
 	ht_entry **data;
 	size_t dsize;
 	size_t count;
+	size_t warn_count;
 } ht_table;
 
 typedef struct ht_iterator {
@@ -56,6 +56,7 @@ void ht_init(ht_table *table, size_t dsize) {
 	memset(table->data, 0, s);
 	table->dsize = dsize;
 	table->count = 0;
+	table->warn_count = WARN_CAPACITY_FACTOR * dsize;
 }
 
 void ht_free(ht_table *table) {
@@ -89,26 +90,9 @@ char *ht_copy(char *s) {
     return p;
 }
 
-int flag_bin = 0;
-int flag_cap = 0;
-
 ht_entry *ht_lookup(ht_table *table, char *key) {
 	size_t hash = ht_hash(table, key);
-	size_t count = 0;
     for (ht_entry *entry = table->data[hash]; entry; entry = entry->next) {
-#if WARN_BIN
-		if (++count >= WARN_BIN && !flag_bin) {
-			fprintf(stderr, "WARNING: bin size over: %lu\n", count);
-			flag_bin = 1;
-		}
-#endif
-#if WARN_CAP
-		if (table->count / table->dsize > WARN_CAP && !flag_cap) {
-			fprintf(stderr, "WARNING: capacity over: %lu%%\n", 100 * table->count / table->dsize);
-			flag_cap = 1;
-		}
-#endif
-
         if (!strcmp(key, entry->key)) {
             return entry;
         }
@@ -123,6 +107,8 @@ char *ht_get(ht_table *table, char *key) {
     }
     return entry->value;
 }
+
+int flag_capacity_warning = 0;
 
 ht_entry *ht_set(ht_table *table, char *key, char *value) {
     ht_entry *entry = ht_lookup(table, key);
@@ -141,6 +127,12 @@ ht_entry *ht_set(ht_table *table, char *key, char *value) {
         entry->next = table->data[hash];
         table->data[hash] = entry;
         table->count++;
+#if WARN_CAPACITY_FACTOR
+		if (table->count > table->warn_count && !flag_capacity_warning) {
+			fprintf(stderr, "WARNING: capacity over: %lu%%\n", 100 * table->count / table->dsize);
+			flag_capacity_warning = 1;
+		}
+#endif
     } else {
         free(entry->value);
     }
