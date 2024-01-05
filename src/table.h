@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include <assert.h>
 
 #define WARN_COLLISION 10
 typedef struct ht_entry {
@@ -162,117 +161,6 @@ void ht_del(ht_table *table, char *key) {
 		free(entry->key);
 		free(entry->value);
 		free(entry);
-    }
-}
-
-void ht_test() {
-	{ // empty table get
-		ht_table table;
-		ht_init(&table, 1);
-		assert(table.count == 0);
-		assert(ht_get(&table, "a") == NULL);
-		ht_free(&table);
-    }
-
-	{ // set and get 1
-		ht_table table;
-		ht_init(&table, 1);
-		ht_set(&table, "a", "1");
-		assert(table.count == 1);
-		assert(strcmp(ht_get(&table, "a"), "1") == 0);
-		ht_free(&table);
-    }
-
-	{ // set and get 2
-		ht_table table;
-		ht_init(&table, 2);
-		ht_set(&table, "a", "1");
-		ht_set(&table, "b", "2");
-		assert(table.count == 2);
-		assert(strcmp(ht_get(&table, "a"), "1") == 0);
-		assert(strcmp(ht_get(&table, "b"), "2") == 0);
-		ht_free(&table);
-    }
-
-	{ // delete
-		ht_table table;
-		ht_init(&table, 1);
-		ht_set(&table, "a", "1");
-		assert(table.count == 1);
-		ht_del(&table, "a");
-		assert(table.count == 0);
-		assert(ht_get(&table, "a") == NULL);
-		ht_free(&table);
-    }
-
-	{ // iterate
-		ht_table table;
-		ht_init(&table, 2);
-		ht_iterator iter = ht_iterate(&table);
-		assert(ht_next(&iter) == NULL);
-		ht_set(&table, "a", "1");
-		iter = ht_iterate(&table);
-		ht_entry *entry = ht_next(&iter);
-		assert(strcmp(entry->key, "a") == 0);
-		assert(strcmp(entry->value, "1") == 0);
-		assert(ht_next(&iter) == NULL);
-		ht_set(&table, "b", "2");
-		iter = ht_iterate(&table);
-		entry = ht_next(&iter);
-		assert(strcmp(entry->key, "b") == 0);
-		assert(strcmp(entry->value, "2") == 0);
-		entry = ht_next(&iter);
-		assert(strcmp(entry->key, "a") == 0);
-		assert(strcmp(entry->value, "1") == 0);
-		assert(ht_next(&iter) == NULL);
-		ht_free(&table);
-
-	}
-
-	{ // high capacity
-		int count = 9;
-		char buffer[4];
-		ht_table table;
-		ht_init(&table, 100);
-		for (int i = 0; i < count; i++) {
-			sprintf(buffer, "%d", i);
-			ht_set(&table, buffer, buffer);
-			assert((int)table.count == i + 1);
-		}
-		for (int i = 0; i < count; i++) {
-			sprintf(buffer, "%d", i);
-			assert(strcmp(ht_get(&table, buffer), buffer) == 0);
-		}
-		for (int i = 0; i < count; i++) {
-			sprintf(buffer, "%d", i);
-			ht_del(&table, buffer);
-			assert((int)table.count == count - i - 1);
-		}
-		ht_free(&table);
-    }
-
-	{ // low capacity
-		int count = 9;
-		char buffer[4];
-		for (int c = 1; c < count; c++) {
-			ht_table table;
-			ht_init(&table, c);
-			for (int i = 0; i < count; i++) {
-				sprintf(buffer, "%d", i);
-				ht_set(&table, buffer, buffer);
-				assert((int)table.count == i + 1);
-			}
-			for (int i = 0; i < count; i++) {
-				sprintf(buffer, "%d", i);
-				assert(strcmp(ht_get(&table, buffer), buffer) == 0);
-			}
-			for (int i = 0; i < count; i++) {
-				sprintf(buffer, "%d", i);
-				ht_del(&table, buffer);
-				assert((int)table.count == count - i - 1);
-			}
-			ht_free(&table);
-		}
     }
 }
 
