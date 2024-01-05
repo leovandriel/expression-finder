@@ -3,7 +3,8 @@
 
 #include <stdio.h>
 
-void ex_double_str(char *buffer, double d, int precision) {
+void ex_double_str(char *buffer, double d, int precision)
+{
     sprintf(buffer, "%.*e", precision, d);
 }
 

@@ -7,13 +7,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-const double primitives[6] = { 1., 2., 3., 5., M_PI, M_E };
-const double primitive_symbols[6] = { '1', '2', '3', '5', 'p', 'e' };
+const double primitives[6] = {1., 2., 3., 5., M_PI, M_E};
+const double primitive_symbols[6] = {'1', '2', '3', '5', 'p', 'e'};
 const int primitive_max = 5;
 const int unary_max = 2;
 const int binary_max = 4;
 
-typedef struct ex_iterator {
+typedef struct ex_iterator
+{
     int volume;
     int symbol_index;
     int spread_index;
@@ -25,7 +26,8 @@ typedef struct ex_iterator {
     bool root;
 } ex_iterator;
 
-void ex_init_in(int volume, ex_iterator *iter, bool all, bool root) {
+void ex_init_in(int volume, ex_iterator *iter, bool all, bool root)
+{
     iter->volume = volume;
     iter->symbol_index = -1;
     iter->spread_index = 0;
@@ -38,38 +40,68 @@ void ex_init_in(int volume, ex_iterator *iter, bool all, bool root) {
     iter->root = root;
 }
 
-void ex_init(ex_iterator *iter, bool all) {
+void ex_init(ex_iterator *iter, bool all)
+{
     ex_init_in(0, iter, all, true);
 }
 
-void ex_init_size(int volume, ex_iterator *iter, bool all) {
+void ex_init_size(int volume, ex_iterator *iter, bool all)
+{
     ex_init_in(volume, iter, all, false);
 }
 
-char *ex_iterator_str_in(char *buffer, ex_iterator *iter) {
-    if (iter->volume == 0) {
-        switch (iter->symbol) {
-            case 'p': strncpy(buffer, "pi", 2); buffer += 2; break;
-            default: *(buffer++) = iter->symbol;
+char *ex_iterator_str_in(char *buffer, ex_iterator *iter)
+{
+    if (iter->volume == 0)
+    {
+        switch (iter->symbol)
+        {
+        case 'p':
+            strncpy(buffer, "pi", 2);
+            buffer += 2;
+            break;
+        default:
+            *(buffer++) = iter->symbol;
         }
         return buffer;
-    } else if (iter->spread_index == 0) {
-        switch(iter->symbol) {
-            case 'l': strncpy(buffer, "ln(", 3); buffer += 3; break;
-            case 'c': strncpy(buffer, "cos(", 4); buffer += 4; break;
-            default: *(buffer++) = iter->symbol;
+    }
+    else if (iter->spread_index == 0)
+    {
+        switch (iter->symbol)
+        {
+        case 'l':
+            strncpy(buffer, "ln(", 3);
+            buffer += 3;
+            break;
+        case 'c':
+            strncpy(buffer, "cos(", 4);
+            buffer += 4;
+            break;
+        default:
+            *(buffer++) = iter->symbol;
         }
         buffer = ex_iterator_str_in(buffer, iter->child[0]);
-        switch(iter->symbol) {
-            case 'l': case 'c': *(buffer++) = ')'; break;
+        switch (iter->symbol)
+        {
+        case 'l':
+        case 'c':
+            *(buffer++) = ')';
+            break;
         }
         return buffer;
-    } else {
+    }
+    else
+    {
         *(buffer++) = '(';
         buffer = ex_iterator_str_in(buffer, iter->child[0]);
-        switch(iter->symbol) {
-            case 'r': strncpy(buffer, "^/", 2); buffer += 2; break;
-            default: *(buffer++) = iter->symbol;
+        switch (iter->symbol)
+        {
+        case 'r':
+            strncpy(buffer, "^/", 2);
+            buffer += 2;
+            break;
+        default:
+            *(buffer++) = iter->symbol;
         }
         buffer = ex_iterator_str_in(buffer, iter->child[1]);
         *(buffer++) = ')';
@@ -77,82 +109,112 @@ char *ex_iterator_str_in(char *buffer, ex_iterator *iter) {
     }
 }
 
-void ex_iterator_str(char *buffer, ex_iterator *iter) {
-    if (iter->root) {
+void ex_iterator_str(char *buffer, ex_iterator *iter)
+{
+    if (iter->root)
+    {
         iter = iter->child[0];
     }
     *(ex_iterator_str_in(buffer, iter)) = '\0';
 }
 
-bool ex_is_round(double value) {
+bool ex_is_round(double value)
+{
     return floor(value) == value;
 }
 
-unsigned char primes[] = { 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197, 199, 211, 223, 227, 229, 233, 239, 241, 251 };
+unsigned char primes[] = {7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197, 199, 211, 223, 227, 229, 233, 239, 241, 251};
 
-bool ex_is_primish(double value) {
-    if (value == M_PI || value == M_E) {
+bool ex_is_primish(double value)
+{
+    if (value == M_PI || value == M_E)
+    {
         return false;
     }
     double f = floor(value);
-    if (f != value) {
+    if (f != value)
+    {
         return true;
     }
     double a = fabs(f);
-    if (a < 7.) {
+    if (a < 7.)
+    {
         return false;
     }
-    if (a > 256.) {
+    if (a > 256.)
+    {
         return true;
     }
     int t = (int)a, left = 0, right = sizeof(primes) - 1;
-    while (left <= right) {
+    while (left <= right)
+    {
         int mid = floor((left + right) / 2);
-        if (primes[mid] < t) {
+        if (primes[mid] < t)
+        {
             left = mid + 1;
-        } else if (primes[mid] > t) {
+        }
+        else if (primes[mid] > t)
+        {
             right = mid - 1;
-        } else {
+        }
+        else
+        {
             return true;
         }
     }
     return false;
 }
 
-bool ex_is_product_of_value(ex_iterator *iter, double value) {
-    if (fabs(iter->value - value) < 1e-12) {
+bool ex_is_product_of_value(ex_iterator *iter, double value)
+{
+    if (fabs(iter->value - value) < 1e-12)
+    {
         return true;
     }
-    if (iter->symbol == '*' || iter->symbol == '/') {
-        if (ex_is_product_of_value(iter->child[0], value) || ex_is_product_of_value(iter->child[1], value)) {
+    if (iter->symbol == '*' || iter->symbol == '/')
+    {
+        if (ex_is_product_of_value(iter->child[0], value) || ex_is_product_of_value(iter->child[1], value))
+        {
             return true;
         }
-    } else if (iter->symbol == '-' || iter->symbol == '^' || iter->symbol == 'r') {
-        if (ex_is_product_of_value(iter->child[0], value)) {
+    }
+    else if (iter->symbol == '-' || iter->symbol == '^' || iter->symbol == 'r')
+    {
+        if (ex_is_product_of_value(iter->child[0], value))
+        {
             return true;
         }
     }
     return false;
 }
 
-bool ex_is_product_of_symbol(ex_iterator *iter, char symbol) {
-    if (iter->symbol == symbol) {
+bool ex_is_product_of_symbol(ex_iterator *iter, char symbol)
+{
+    if (iter->symbol == symbol)
+    {
         return true;
     }
-    if (iter->symbol == '*') {
-        if (ex_is_product_of_symbol(iter->child[0], symbol) || ex_is_product_of_symbol(iter->child[1], symbol)) {
+    if (iter->symbol == '*')
+    {
+        if (ex_is_product_of_symbol(iter->child[0], symbol) || ex_is_product_of_symbol(iter->child[1], symbol))
+        {
             return true;
         }
-    } else if (iter->symbol == '-' || iter->symbol == '/') {
-        if (ex_is_product_of_symbol(iter->child[0], symbol)) {
+    }
+    else if (iter->symbol == '-' || iter->symbol == '/')
+    {
+        if (ex_is_product_of_symbol(iter->child[0], symbol))
+        {
             return true;
         }
     }
     return false;
 }
 
-bool ex_eval_primitive(ex_iterator *iter) {
-    if (iter->symbol_index++ != primitive_max) {
+bool ex_eval_primitive(ex_iterator *iter)
+{
+    if (iter->symbol_index++ != primitive_max)
+    {
         iter->value = primitives[iter->symbol_index];
         iter->symbol = primitive_symbols[iter->symbol_index];
         iter->arity = 0;
@@ -161,7 +223,8 @@ bool ex_eval_primitive(ex_iterator *iter) {
     return false;
 }
 
-bool ex_eval_unary(ex_iterator *iter) {
+bool ex_eval_unary(ex_iterator *iter)
+{
     ex_iterator *child = iter->child[0];
     double value = child->value;
     char symbol = child->symbol;
@@ -184,13 +247,14 @@ bool ex_eval_unary(ex_iterator *iter) {
             case 1: { // logarithm
                 if ((iter->all || (
                     symbol != '^' && symbol != 'r' // log(x^y) = y*log(x), log(sqrt(x)) = log(x)/2
-                    // && !ex_is_product_of_value(iter, M_E) // log(e*x)
+                    && !ex_is_product_of_value(iter, M_E) // log(e*x)
                     && (symbol != '/' || child->child[0]->value != 1.) // log(1/x) = -log(x)
                 ))
                     && value > 0. && value != 1.
                 ) {
-                    iter->value = log(value);
-                    if (iter->all || !ex_is_round(iter->value)) { // log(10) = 1
+                    double value0 = log(value);
+                    if (iter->all || !ex_is_round(value0)) { // log(10) = 1
+                        iter->value = value0;
                         iter->symbol = 'l';
                         iter->arity = 1;
                         return true;
@@ -201,7 +265,8 @@ bool ex_eval_unary(ex_iterator *iter) {
                 if ((iter->all || (
                     value != M_PI / 3. // cos(pi/3) = 1/2
                 ))
-                    && value > 0.001 && value < M_PI / 2. // cos(0..pi/2)
+                    && value > 0.0045 // cos(0.0045) ~= 1 (0.99999)
+                    && value < M_PI / 2. // cos(pi/2) = 0
                 ) {
                     iter->value = cos(value);
                     iter->symbol = 'c';
@@ -214,23 +279,29 @@ bool ex_eval_unary(ex_iterator *iter) {
     return false;
 }
 
-int ex_compare(ex_iterator *iter0, ex_iterator *iter1) {
-    if (iter1->arity != iter0->arity) {
+int ex_compare(ex_iterator *iter0, ex_iterator *iter1)
+{
+    if (iter1->arity != iter0->arity)
+    {
         return iter1->arity - iter0->arity;
     }
-    if (iter1->symbol != iter0->symbol) {
+    if (iter1->symbol != iter0->symbol)
+    {
         return iter1->symbol - iter0->symbol;
     }
-    for (int i = 0; i < iter0->arity; i++) {
+    for (int i = 0; i < iter0->arity; i++)
+    {
         int diff = ex_compare(iter0->child[i], iter1->child[i]);
-        if (diff) {
+        if (diff)
+        {
             return diff;
         }
     }
     return 0;
 }
 
-bool ex_eval_binary(ex_iterator *iter) {
+bool ex_eval_binary(ex_iterator *iter)
+{
     ex_iterator *child0 = iter->child[0];
     ex_iterator *child1 = iter->child[1];
     double value0 = child0->value;
@@ -248,11 +319,14 @@ bool ex_eval_binary(ex_iterator *iter) {
                     && (symbol1 != '+' || ex_compare(child0, child1->child[0]) > 0) // 2+(1+x) = 1+(2+x)
                     && (symbol1 != '+' || ex_is_primish(value0 + child1->child[0]->value)) // 1+(2+x) = 3+x
                     && (symbol1 != '*' || (value0 != child1->child[0]->value && value0 != child1->child[1]->value)) // x+(x*y) = (x+1)*y
+                    && (symbol1 != '/' || !ex_is_round(value0) || !ex_is_round(child1->child[0]->value) || !ex_is_round(child1->child[1]->value)) // x+(y/z) = (x*z+y)/z
+                    && (symbol1 != '-' || child1->child[0]->symbol != '/' || !ex_is_round(value0) || !ex_is_round(child1->child[0]->child[0]->value) || !ex_is_round(child1->child[0]->child[1]->value)) // x-(y/z) = (x*z-y)/z
                 ))
                     && value0 != -value1
                 ) {
-                    iter->value = value0 + value1;
-                    if (iter->all || (value1 == 125. || value1 == 216. || value1 == 225. || fabs(value1) == 243. || ex_is_primish(iter->value))) {
+                    double value = value0 + value1;
+                    if (iter->all || (value1 == 125. || value1 == 216. || value1 == 225. || fabs(value1) == 243. || ex_is_primish(value))) {
+                        iter->value = value;
                         iter->symbol = '+';
                         iter->arity = 2;
                         return true;
@@ -323,8 +397,9 @@ bool ex_eval_binary(ex_iterator *iter) {
                     && value1 > 1. && ex_is_round(value1) // x^/2.5 = x^.4
                     && value1 < 1000 // x^/1000 ~= 1 
                 ) {
-                    iter->value = value1 == 2. ? sqrt(value0) : pow(value0, 1. / value1);
-                    if (iter->all || !ex_is_round(iter->value)) { // 4^/2 = 2
+                    double value = value1 == 2. ? sqrt(value0) : pow(value0, 1. / value1);
+                    if (iter->all || !ex_is_round(value)) { // 4^/2 = 2
+                        iter->value = value;
                         iter->symbol = 'r';
                         iter->arity = 2;
                         return true;
@@ -333,7 +408,7 @@ bool ex_eval_binary(ex_iterator *iter) {
             } break;
             case 4: { // power
                 if ((iter->all || (
-                    symbol0 != '^' && symbol0 != 'r' // (x^y)^z  x^(y*z)
+                    symbol0 != '^' && symbol0 != 'r' // (x^y)^z = x^(y*z)
                     && (symbol0 != '/' || symbol1 != '-') // (x/y)^-z = (y/x)^z
                     && (symbol0 != 'e' || symbol1 != 'l') // e^log(x) = x
                     && (symbol0 != 'e' || !ex_is_product_of_symbol(child1, 'l')) // e^(x*log(y)) = y^x
@@ -347,9 +422,12 @@ bool ex_eval_binary(ex_iterator *iter) {
                 ) {
                     double v = 1. / value1;
                     if (iter->all || !ex_is_round(v) || v >= 1000) { // x^(1/2) = x^/2
-                        double l = log(value0) * value1;
-                        if (l < 100 && l > -100) { // 2^(5^5) = inf
-                            iter->value = pow(value0, value1);
+                        double value = pow(value0, value1);
+                        if (isnormal(value) // 5^(5^5) = inf
+                            // && value > 0.00001 // ~= 0
+                            // && value < 100000 // ~= inf
+                        ) {
+                            iter->value = value;
                             iter->symbol = '^';
                             iter->arity = 2;
                             return true;
@@ -362,46 +440,59 @@ bool ex_eval_binary(ex_iterator *iter) {
     return false;
 }
 
-bool ex_next(ex_iterator *iter) {
-    if (iter->root) {
-        if (!iter->child[0]) {
+bool ex_next(ex_iterator *iter)
+{
+    if (iter->root)
+    {
+        if (!iter->child[0])
+        {
             iter->child[0] = iter + 1;
             ex_init_size(iter->volume, iter->child[0], iter->all);
         }
-        while (!ex_next(iter->child[0])) {
+        while (!ex_next(iter->child[0]))
+        {
             ex_init_size(++iter->volume, iter->child[0], iter->all);
         }
         iter->value = iter->child[0]->value;
         return true;
     }
     // if iterating primitives
-    if (iter->volume == 0) {
+    if (iter->volume == 0)
+    {
         // return from primitive sub-iterator
         return ex_eval_primitive(iter);
     }
     // using loop to allow jumping with continue statements
-    while (true) {
+    while (true)
+    {
         // if iterating over unary functions
-        if (iter->spread_index == 0) {
+        if (iter->spread_index == 0)
+        {
             // if sub-tree is not yet initialized
-            if (!iter->child[0]) {
+            if (!iter->child[0])
+            {
                 iter->child[0] = iter + 1;
                 ex_init_size(iter->volume - 1, iter->child[0], iter->all);
                 ex_next(iter->child[0]);
                 iter->symbol_index = -1;
             }
             // if we cycled through all unary operators, get next sub-tree
-            if (iter->symbol_index == unary_max) {
+            if (iter->symbol_index == unary_max)
+            {
                 bool has = ex_next(iter->child[0]);
-                if (!has) {
-                    if (iter->volume > 1) {
+                if (!has)
+                {
+                    if (iter->volume > 1)
+                    {
                         // reset iterator to binary
                         iter->spread_index = 1;
                         iter->child[0] = NULL;
                         iter->symbol_index = binary_max;
                         // move on to binary functions
                         continue;
-                    } else {
+                    }
+                    else
+                    {
                         // iterator depleted
                         return false;
                     }
@@ -410,7 +501,8 @@ bool ex_next(ex_iterator *iter) {
                 iter->symbol_index = -1;
             }
             // if we found a unary symbol that operates on the sub-tree
-            if (ex_eval_unary(iter)) {
+            if (ex_eval_unary(iter))
+            {
                 // iteration complete, value available
                 return true;
             }
@@ -418,27 +510,34 @@ bool ex_next(ex_iterator *iter) {
         }
         // else iterating over binary functions
         // again, using loop to allow jumping with continue statements
-        while (true) {
+        while (true)
+        {
             // if first sub-tree is not yet initialized
-            if (!iter->child[0]) {
+            if (!iter->child[0])
+            {
                 iter->child[0] = iter + 1;
                 ex_init_size(iter->spread_index - 1, iter->child[0], iter->all);
                 ex_next(iter->child[0]);
             }
             // if second sub-tree is not yet initialized
-            if (!iter->child[1]) {
+            if (!iter->child[1])
+            {
                 iter->child[1] = iter + (iter->spread_index + 1);
                 ex_init_size(iter->volume - (iter->spread_index + 1), iter->child[1], iter->all);
                 ex_next(iter->child[1]);
                 iter->symbol_index = -1;
             }
-            if (iter->symbol_index == binary_max) {
+            if (iter->symbol_index == binary_max)
+            {
                 bool has0 = ex_next(iter->child[1]);
-                if (!has0) {
+                if (!has0)
+                {
                     bool has1 = ex_next(iter->child[0]);
-                    if (!has1) {
+                    if (!has1)
+                    {
                         iter->spread_index++;
-                        if (iter->spread_index == iter->volume) {
+                        if (iter->spread_index == iter->volume)
+                        {
                             // iterator depleted
                             return false;
                         }
@@ -453,7 +552,8 @@ bool ex_next(ex_iterator *iter) {
                 iter->symbol_index = -1;
             }
             // if we found a binary symbol that operates on the sub-tree
-            if (ex_eval_binary(iter)) {
+            if (ex_eval_binary(iter))
+            {
                 // iteration complete, value available
                 return true;
             }

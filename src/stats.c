@@ -3,13 +3,15 @@
 #include "table.h"
 #include "util.h"
 
-int main() {
+int main()
+{
     int size = 9;
     ex_iterator stack[100];
     ht_table table;
     bool all;
     char key[100];
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 2; i++)
+    {
         all = !i;
         const char *type = all ? "all" : "opt";
         ht_init(&table, 1000000);
@@ -17,11 +19,14 @@ int main() {
         size_t last_iterations = 1;
         size_t last_unique = 1;
         size_t total = 0;
-        for (int i = 0; i < size; i++) {
+        for (int i = 0; i < size; i++)
+        {
             size_t count = 0;
-            for (ex_init_size(i, stack, all); ex_next(stack);) {
+            for (ex_init_size(i, stack, all); ex_next(stack);)
+            {
                 ex_double_str(key, stack->value, 9);
-                if (!ht_get(&table, key)) {
+                if (!ht_get(&table, key))
+                {
                     ht_set(&table, key, "");
                 }
                 count++;
