@@ -3,7 +3,7 @@
 #include "table.h"
 #include "util.h"
 
-int main(int argc, char *argv[]) {
+int main() {
     int size = 12;
     ex_iterator stack[100];
     char key[100];

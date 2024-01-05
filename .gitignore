@@ -1,4 +1,5 @@
 bin/*
+dist/find.*
 
 !.vscode/launch.json
 !.vscode/tasks.json

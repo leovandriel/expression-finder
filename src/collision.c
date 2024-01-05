@@ -3,7 +3,7 @@
 #include "table.h"
 #include "util.h"
 
-int main(int argc, char *argv[]) {
+int main() {
     int size = 6;
     ex_iterator stack[100];
     ht_table table;
@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
         ex_double_str(key, stack->value, 9);
         char *value = ht_get(&table, key);
         ex_iterator_str(expression, stack);
-        if (value && strcmp(key, "inf")) {
+        if (value) {
             printf("collision: %s = %s = %s\n", expression, value, key);
             count++;
         } else {

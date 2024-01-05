@@ -3,11 +3,11 @@
 #include "table.h"
 #include "util.h"
 
-int main(int argc, char *argv[]) {
+int main() {
     int size = 7;
     ex_iterator stack[100];
     ht_table table;
-    ht_init(&table, 1000000);
+    ht_init(&table, 2000000);
     char key[100];
     char expression[100];
     for (ex_init(stack, true); ex_next(stack) && stack->volume < size;) {
@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
             ht_set(&table, key, expression);
         }
     }
-    for (ex_init(stack, false); ex_next(stack) && stack->volume < size + 2;) {
+    for (ex_init(stack, false); ex_next(stack) && stack->volume < size + 4;) {
         ex_double_str(key, stack->value, 9);
         // ex_iterator_str(expression, stack);
         // if (!strcmp(expression, ""))

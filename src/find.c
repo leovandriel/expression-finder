@@ -76,8 +76,8 @@ char *latex(ex_iterator *iter, char *buffer, int prec) {
 }
 
 void report(ex_iterator *iter, double value, int size) {
-    char latex_buffer[1000];
 #ifdef __EMSCRIPTEN__
+    char latex_buffer[1000];
     *(latex(iter, latex_buffer, 0)) = '\0';
     EM_ASM({ onResult(UTF8ToString($0, $1), $2, $3); }, latex_buffer, strlen(latex_buffer), value, size);
 #else

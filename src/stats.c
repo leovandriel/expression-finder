@@ -3,8 +3,8 @@
 #include "table.h"
 #include "util.h"
 
-int main(int argc, char *argv[]) {
-    size_t size = 9;
+int main() {
+    int size = 9;
     ex_iterator stack[100];
     ht_table table;
     bool all;
