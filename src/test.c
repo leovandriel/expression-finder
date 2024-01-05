@@ -159,7 +159,8 @@ void ht_perf(size_t table_size, size_t key_count, size_t get_count, int key_leng
 	ht_free(&table);
 }
 
-void ht_perfs() {
+void ht_perfs()
+{
 	size_t base_table_size = 1e3;
 	size_t base_key_count = 1e3;
 	size_t base_get_count = 1e8;
