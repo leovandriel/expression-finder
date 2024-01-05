@@ -223,6 +223,11 @@ bool ex_eval_primitive(ex_iterator *iter)
     return false;
 }
 
+int ex_is_normal(double value) 
+{
+    return isnormal(value) && ((value > 1e-10 && value < 1e10) || (value < -1e-10 && value > -1e10));
+}
+
 bool ex_eval_unary(ex_iterator *iter)
 {
     ex_iterator *child = iter->child[0];
@@ -325,7 +330,7 @@ bool ex_eval_binary(ex_iterator *iter)
                     && value0 != -value1
                 ) {
                     double value = value0 + value1;
-                    if (iter->all || (value1 == 125. || value1 == 216. || value1 == 225. || fabs(value1) == 243. || ex_is_primish(value))) {
+                    if ((iter->all || (value1 == 125. || value1 == 216. || value1 == 225. || fabs(value1) == 243. || ex_is_primish(value))) && ex_is_normal(value)) {
                         iter->value = value;
                         iter->symbol = '+';
                         iter->arity = 2;
@@ -345,10 +350,13 @@ bool ex_eval_binary(ex_iterator *iter)
                     && value0 != 1. && value0 != -1. // 1*x = x, -1*x = -x
                     && value1 != 1. && value1 != -1. // x*1 = x, x*-1 = -x
                 ))) {
-                    iter->value = value0 * value1;
-                    iter->symbol = '*';
-                    iter->arity = 2;
-                    return true;
+                    double value = value0 * value1;
+                    if (ex_is_normal(value)) {
+                        iter->value = value;
+                        iter->symbol = '*';
+                        iter->arity = 2;
+                        return true;
+                    }
                 }
             } break;
             case 2: { // division
@@ -381,10 +389,13 @@ bool ex_eval_binary(ex_iterator *iter)
                     && (symbol0 != 'r' || child0->child[1]->value != 2. || value1 != child0->child[0]->value) // (x^/2)/x = 1/x^/2
                     && value1 != 1. && value1 != -1. // x/1 = x
                 ))) {
-                    iter->value = value0 / value1;
-                    iter->symbol = '/';
-                    iter->arity = 2;
-                    return true;
+                    double value = value0 / value1;
+                    if (ex_is_normal(value)) {
+                        iter->value = value;
+                        iter->symbol = '/';
+                        iter->arity = 2;
+                        return true;
+                    }
                 }
             } break;
             case 3: { // root
@@ -398,7 +409,7 @@ bool ex_eval_binary(ex_iterator *iter)
                     && value1 < 1000 // x^/1000 ~= 1 
                 ) {
                     double value = value1 == 2. ? sqrt(value0) : pow(value0, 1. / value1);
-                    if (iter->all || !ex_is_round(value)) { // 4^/2 = 2
+                    if ((iter->all || !ex_is_round(value)) && ex_is_normal(value)) { // 4^/2 = 2
                         iter->value = value;
                         iter->symbol = 'r';
                         iter->arity = 2;
@@ -423,10 +434,7 @@ bool ex_eval_binary(ex_iterator *iter)
                     double v = 1. / value1;
                     if (iter->all || !ex_is_round(v) || v >= 1000) { // x^(1/2) = x^/2
                         double value = pow(value0, value1);
-                        if (isnormal(value) // 5^(5^5) = inf
-                            // && value > 0.00001 // ~= 0
-                            // && value < 100000 // ~= inf
-                        ) {
+                        if (ex_is_normal(value)) {
                             iter->value = value;
                             iter->symbol = '^';
                             iter->arity = 2;
