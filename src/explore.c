@@ -1,3 +1,4 @@
+//usr/bin/gcc "$0" -o bin/explore -Wall -Wextra -O3 -lm && ./bin/explore "$@"; exit $?
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>

@@ -1,3 +1,4 @@
+//usr/bin/gcc "$0" -o bin/list -Wall -Wextra -O3 -lm && ./bin/list "$@"; exit $?
 #include "iterator.h"
 
 int main(int argc, char *argv[]) {

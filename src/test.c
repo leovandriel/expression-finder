@@ -1,3 +1,4 @@
+//usr/bin/gcc "$0" -o bin/test -Wall -Wextra -O3 -lm && ./bin/test "$@"; exit $?
 #include <assert.h>
 #include <time.h>
 

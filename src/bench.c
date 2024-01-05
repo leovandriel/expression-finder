@@ -1,3 +1,4 @@
+//usr/bin/gcc "$0" -o bin/bench -Wall -Wextra -O3 -lm && ./bin/bench "$@"; exit $?
 #include <time.h>
 
 #include "iterator.h"

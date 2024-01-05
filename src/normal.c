@@ -1,3 +1,4 @@
+//usr/bin/gcc "$0" -o bin/normal -Wall -Wextra -O3 -lm && ./bin/normal "$@"; exit $?
 #include "iterator.h"
 #include "table.h"
 #include "util.h"

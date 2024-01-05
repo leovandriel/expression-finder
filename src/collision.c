@@ -1,3 +1,4 @@
+//usr/bin/gcc "$0" -o bin/collision -Wall -Wextra -O3 -lm && ./bin/collision "$@"; exit $?
 #include "iterator.h"
 #include "table.h"
 #include "util.h"
