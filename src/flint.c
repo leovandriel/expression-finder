@@ -3,8 +3,8 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "flint/arb.h"
-#include "mpfr.h"
+#include <flint/arb.h>
+#include <mpfr.h>
 
 int main()
 {

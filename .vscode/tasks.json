@@ -12,7 +12,8 @@
                 "${file}",
                 "-o",
                 "${workspaceFolder}/bin/${fileBasenameNoExtension}",
-                "-lm"
+                "-lm",
+                "-lflint"
             ],
             "options": {
                 "cwd": "/usr/bin"
