@@ -11,16 +11,6 @@ int main()
         for (ex_init_size(i, stack, false); ex_next(stack);)
         {
             ex_iterator_str(expression, stack);
-            if (!stack->value)
-            {
-                printf("error: %s is ZERO\n", expression);
-                return -1;
-            }
-            if (isnan(stack->value))
-            {
-                printf("error: %s is NAN\n", expression);
-                return -1;
-            }
             printf("%s = %.20f\n", expression, stack->value);
         }
     }

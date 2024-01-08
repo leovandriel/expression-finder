@@ -23,7 +23,7 @@ int main()
             ht_set(&table, key, expression);
         }
     }
-    for (ex_init(stack, false); ex_next(stack) && stack->volume < size + 4;)
+    for (ex_init(stack, false); ex_next(stack) && stack->volume < size + 3;)
     {
         ex_double_str(key, stack->value, 9);
         // ex_iterator_str(expression, stack);

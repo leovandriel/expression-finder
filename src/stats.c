@@ -3,6 +3,8 @@
 #include "table.h"
 #include "util.h"
 
+// NOTE: opt unique grows around 7^size/9, with around 10M/second
+
 int main()
 {
     int size = 9;
