@@ -211,6 +211,29 @@ bool ex_is_product_of_symbol(ex_iterator *iter, char symbol)
     return false;
 }
 
+bool ex_is_product_of_ln_below(ex_iterator *iter, double value)
+{
+    if (iter->symbol == 'l' && iter->child[0]->value < value)
+    {
+        return true;
+    }
+    if (iter->symbol == '*')
+    {
+        if (ex_is_product_of_ln_below(iter->child[0], value) || ex_is_product_of_ln_below(iter->child[1], value))
+        {
+            return true;
+        }
+    }
+    else if (iter->symbol == '-' || iter->symbol == '/')
+    {
+        if (ex_is_product_of_ln_below(iter->child[0], value))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool ex_eval_primitive(ex_iterator *iter)
 {
     if (iter->symbol_index++ != primitive_max)
@@ -225,7 +248,12 @@ bool ex_eval_primitive(ex_iterator *iter)
 
 int ex_is_normal(double value) 
 {
-    return isnormal(value) && ((value > 1e-10 && value < 1e10) || (value < -1e-10 && value > -1e10));
+    return isnormal(value) && ((value > 1e-20 && value < 1e20) || (value < -1e-20 && value > -1e20));
+}
+
+int ex_is_primitive(char symbol)
+{
+    return symbol == '1' || symbol == '2' || symbol == '3' || symbol == '5'; // || symbol == 'p' || symbol == 'e';
 }
 
 bool ex_eval_unary(ex_iterator *iter)
@@ -269,6 +297,7 @@ bool ex_eval_unary(ex_iterator *iter)
             case 2: { // cosine
                 if ((iter->all || (
                     value != M_PI / 3. // cos(pi/3) = 1/2
+                    && (symbol != '/' || child->child[0]->symbol != 'p' || (child->child[1]->value != 4. && child->child[1]->value != 6.)) // cos(pi/4) = sqrt(2)/2
                 ))
                     && value > 0.0045 // cos(0.0045) ~= 1 (0.99999)
                     && value < M_PI / 2. // cos(pi/2) = 0
@@ -321,11 +350,19 @@ bool ex_eval_binary(ex_iterator *iter)
                     && (symbol0 != symbol1 || (symbol0 != '-' && symbol0 != 'l' && symbol0 != '+' // x+x = 2*x
                         && (symbol0 != '/' || symbol1 != '/' || child0->child[1]->value != child1->child[1]->value) // y/x+z/x = (y+z)/x
                     ))
+                    && (symbol0 != '-' || child0->child[0]->symbol != 'l' || symbol1 != 'l') // -ln(x)+ln(y) = ln(y/x)
                     && (symbol1 != '+' || ex_compare(child0, child1->child[0]) > 0) // 2+(1+x) = 1+(2+x)
                     && (symbol1 != '+' || ex_is_primish(value0 + child1->child[0]->value)) // 1+(2+x) = 3+x
                     && (symbol1 != '*' || (value0 != child1->child[0]->value && value0 != child1->child[1]->value)) // x+(x*y) = (x+1)*y
                     && (symbol1 != '/' || !ex_is_round(value0) || !ex_is_round(child1->child[0]->value) || !ex_is_round(child1->child[1]->value)) // x+(y/z) = (x*z+y)/z
                     && (symbol1 != '-' || child1->child[0]->symbol != '/' || !ex_is_round(value0) || !ex_is_round(child1->child[0]->child[0]->value) || !ex_is_round(child1->child[0]->child[1]->value)) // x-(y/z) = (x*z-y)/z
+                    && (value0 != 1. || (value1 != 6. && value1 != 10. && value1 != -8. && value1 != .25)) // 1+2*3 = 2+5, 1+2*5 = 2+3^2
+                    && (value0 != 2. || (value1 != -9. && value1 != -15.)) // 2-3^2 = -(2+5)
+                    && (value0 != 3. || (value1 != 4. && value1 != 10. && value1 != 8. && value1 != 125.)) // 2+5 = 3+2^2, 3+2*5 = 5+2^3, 3+2^3 = 2+3^2, 3+5^3 = 2^(2+5)
+                    && (value0 != 5. || (value1 != 6.)) // 5+2*3 = 2+3^2
+                    && ((symbol0 != 'p' && symbol0 != 'e') || (symbol1 != '^' && symbol1 != '/') || child1->child[0]->symbol != symbol0  || child1->child[1]->value != 2. ) // pi+pi^2 = pi*(1+pi), pi+pi/2 = 3*pi/2
+                    && (!ex_is_primitive(symbol0) || symbol1 != '-' || child1->child[0]->symbol != '+' || !ex_is_primitive(child1->child[0]->child[0]->symbol)) // 1-(1+pi) = -pi 
+                    && (!ex_is_primitive(symbol0) || symbol1 != '+' || child1->child[1]->symbol != '-' || !ex_is_primitive(child1->child[1]->child[0]->symbol)) // 1+pi-2 = pi-1 
                 ))
                     && value0 != -value1
                 ) {
@@ -345,7 +382,8 @@ bool ex_eval_binary(ex_iterator *iter)
                     && symbol0 != '/' && symbol1 != '/' // (x/y)*(z/w) = (x*z)/(y*w)
                     // && ((symbol0 != symbol1) || symbol0 != '*')
                     && (symbol1 != '*' || (value0 != child1->child[0]->value && value0 != child1->child[1]->value)) // x*(x*y) = x^2*y
-                    && ((symbol1 != '^' && symbol1 != 'r') || value0 != child1->child[0]->value) // x*(x^y) = x^(y+1)
+                    && ((symbol1 != '^' && symbol1 != 'r') || value0 != child1->child[0]->value) // x*x^y = x^(y+1)
+                    && (symbol1 != '^' || child1->child[1]->symbol != '-') // x*y^-z = x/y^z
                     && (symbol1 != '*' || ex_compare(child0, child1->child[0]) > 0) // 3*(2*x) = 2*(3*x)
                     && value0 != 1. && value0 != -1. // 1*x = x, -1*x = -x
                     && value1 != 1. && value1 != -1. // x*1 = x, x*-1 = -x
@@ -382,9 +420,10 @@ bool ex_eval_binary(ex_iterator *iter)
                         && child0->child[0]->value != child1->child[1]->value // (x^y)/(z*x) = (x^(y-1))/z
                     ))
                     && ((symbol1 != '^' && symbol1 != 'r') || value0 != child1->child[0]->value) // x/(x^y) = x^(1-y)
-                    && (symbol0 != '^' || child0->child[0]->value != value1) // x^y/x = x^(y-1)
+                    && ((symbol0 != '^' && symbol0 != 'r') || child0->child[0]->value != value1) // x^y/x = x^(y-1)
                     && (symbol1 != '^' || value0 != 1.) // 1/(x^y) = x^(-y)
                     && (symbol0 != '^' || symbol1 != '^' || child0->child[0]->value != child1->child[0]->value) // (x^y)/(x^z) = x^(y-z)
+                    && (symbol1 != '^' || child1->child[1]->symbol != '-') // x/y^-z = x*y^z
                     && (symbol1 != 'r' || child1->child[1]->value != 2. || value0 != child1->child[0]->value) // x/(x^/2) = x^/2
                     && (symbol0 != 'r' || child0->child[1]->value != 2. || value1 != child0->child[0]->value) // (x^/2)/x = 1/x^/2
                     && value1 != 1. && value1 != -1. // x/1 = x
@@ -426,13 +465,15 @@ bool ex_eval_binary(ex_iterator *iter)
                     && (symbol0 != 'e' || symbol1 != '-' || child1->child[0]->symbol != 'l') // e^-log(x) = 1/x
                     && (symbol1 != 'l' || value0 <= child1->child[0]->value) // 3^log(2) = 2^log(3)
                     && (symbol1 != '-' || child1->child[0]->symbol != 'l' || value0 <= child1->child[0]->child[0]->value) // 3^-log(2) = 2^-log(3)
+                    && !ex_is_product_of_ln_below(child1, value0) // 3^(x*ln(2))) = 2^(x*ln(3))
                     && (symbol0 != '/' || child0->child[0]->value != 1.) // (1/x)^y = x^-y
+                    && (symbol1 != '/' || child1->child[1]->symbol != 'l' || child1->child[1]->child[0]->value != value0) // x^(y/ln(x)) = e^y
                     && value0 != 1. && value0 != -1. && value1 != 1. && value1 != -1. // 1^x = 1
                 ))
                     && value0 > 0. // -1^x = nan
                 ) {
-                    double v = 1. / value1;
-                    if (iter->all || !ex_is_round(v) || v >= 1000) { // x^(1/2) = x^/2
+                    double root = 1. / value1;
+                    if (iter->all || !ex_is_round(root) || root >= 1000) { // x^(1/2) = x^/2
                         double value = pow(value0, value1);
                         if (ex_is_normal(value)) {
                             iter->value = value;
