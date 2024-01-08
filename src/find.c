@@ -1,5 +1,6 @@
 //usr/bin/gcc "$0" -o bin/find -Wall -Wextra -O3 -lm && ./bin/find "$@"; exit $?
 #include "iterator.h"
+#include "util.h"
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
