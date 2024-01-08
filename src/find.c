@@ -166,9 +166,11 @@ int main(int argc, char *argv[])
     char *target = argc > 1 ? argv[1] : "1.6180339";
     printf("target: %s\n", target);
     ex_iterator stack[100] = {};
-    while (true)
+    for (size_t count = 0;; count++)
     {
         next(target, stack, 1000000);
+        printf(" %luM (%d)\r", count, stack->volume);
+        fflush(stdout);
     }
     return 0;
 }
