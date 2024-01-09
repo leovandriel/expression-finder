@@ -15,7 +15,7 @@ int main()
     size_t count = 0;
     char key[100];
     char expression[100];
-    for (ex_init(stack, false); ex_next(stack) && stack->volume < size;)
+    for (ex_init(stack, false); stack->volume < size && ex_next(stack);)
     {
         ex_double_str(key, stack->value, 9);
         char *value = ht_get(&table, key);

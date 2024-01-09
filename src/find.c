@@ -38,7 +38,7 @@ int next(char *target_string, ex_iterator *stack, size_t max)
     {
         ex_init(stack, false);
     }
-    for (size_t count = 0; ex_next(stack) && count < max; count++)
+    for (size_t count = 0; count < max && ex_next(stack); count++)
     {
         double diff = fabs(target_value - stack->value);
         if (diff < max_diff)
