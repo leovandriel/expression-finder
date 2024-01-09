@@ -5,11 +5,14 @@
 
 #include "iterator.h"
 
+// Generates canonical string representation of a double value for use in hash
+// table keys.
 void ex_double_str(char *buffer, double d, int precision)
 {
     sprintf(buffer, "%.*e", precision, d);
 }
 
+// Recursive sub-function of ex_iterator_str
 char *ex_iterator_str_in(char *buffer, ex_iterator *iter)
 {
     if (iter->arity == 0)
@@ -69,6 +72,7 @@ char *ex_iterator_str_in(char *buffer, ex_iterator *iter)
     }
 }
 
+// Writes string representation of expression.
 void ex_iterator_str(char *buffer, ex_iterator *iter)
 {
     if (iter->root)
@@ -78,6 +82,7 @@ void ex_iterator_str(char *buffer, ex_iterator *iter)
     *(ex_iterator_str_in(buffer, iter)) = '\0';
 }
 
+// Writes LaTeX string representation of expression.
 char *latex(ex_iterator *iter, char *buffer, int prec)
 {
     *(buffer++) = ' ';
@@ -187,6 +192,7 @@ char *latex(ex_iterator *iter, char *buffer, int prec)
     return buffer;
 }
 
+// Parse operator string representation to char code.
 char ex_parse_symbol(char *string, int *length)
 {
     switch (*string)
@@ -236,6 +242,7 @@ char ex_parse_symbol(char *string, int *length)
     return '?';
 }
 
+// Recursive sub-function of ex_iterator_parse
 ex_iterator *ex_iterator_parse_in(char *string, int *index, ex_iterator *iter)
 {
     ex_iterator *parent = iter;
@@ -369,6 +376,7 @@ ex_iterator *ex_iterator_parse_in(char *string, int *index, ex_iterator *iter)
     return parent;
 }
 
+// Parse an expression string into an expression tree.
 ex_iterator *ex_iterator_parse(char *string, ex_iterator *iter)
 {
     int index = 0;

@@ -3,6 +3,9 @@
 #include "table.h"
 #include "util.h"
 
+// Search occurrences of expressions that have the same value. This can be used
+// to find new iterator conditions and reduce the number of expressions without
+// loss of expressiveness.
 int main()
 {
     int size = 6;

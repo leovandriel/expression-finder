@@ -2,6 +2,7 @@
 #include "iterator.h"
 #include "util.h"
 
+// Simply list all expressions, grouped by size (volume).
 int main()
 {
     ex_iterator stack[100];

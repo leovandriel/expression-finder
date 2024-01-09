@@ -6,6 +6,8 @@
 #include <flint/arb.h>
 #include <mpfr.h>
 
+// Performance benchmark of arbitrary-precision libraries: FLINT-ARB, FLINT_ARF,
+// and MPFR.
 int main()
 {
 	size_t count = 1e7;

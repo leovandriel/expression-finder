@@ -3,6 +3,10 @@
 #include "table.h"
 #include "util.h"
 
+// Search occurrences of expressions that are returned by the un-optimized
+// iterator (all=true) and are missing from the deduplicated one (all=false).
+// This can be used to find overly restrictive conditions in the iterator, i.e.
+// loss of expressiveness.
 int main()
 {
     int size = 7;

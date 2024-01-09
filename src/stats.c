@@ -3,8 +3,12 @@
 #include "table.h"
 #include "util.h"
 
+// Counting benchmark for iterator - Loops over the iterator and logs number of
+// expressions, grouped by expression size (volume). It makes distinction
+// between iterating over all possible expressions (all), and without duplicates
+// (opt) expressions.
+//
 // NOTE: opt unique grows around 7^size/9, with around 10M/second
-
 int main()
 {
     int size = 9;

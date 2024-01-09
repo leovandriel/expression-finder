@@ -3,6 +3,7 @@
 #include "util.h"
 #include "flint.h"
 
+// Parses and evaluates a expression string.
 int main(int argc, char *argv[])
 {
     char *input = argc > 1 ? argv[1] : "(1+5^/2)/2";

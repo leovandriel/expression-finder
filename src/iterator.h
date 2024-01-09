@@ -7,23 +7,32 @@
 #include <stdlib.h>
 #include <string.h>
 
+// Available constants
 const double primitives[6] = {1., 2., 3., 5., M_PI, M_E};
+
+// Symbol for each constant
 const double primitive_symbols[6] = {'1', '2', '3', '5', 'p', 'e'};
 const int primitive_max = 5;
+
+// Number of constants
+// Number of unary operators
 const int unary_max = 2;
+
+// Number of binary operators
 const int binary_max = 4;
 
+// Represents a node in the expression tree.
 typedef struct ex_iterator
 {
-    int volume;
-    int symbol_index;
-    int spread_index;
-    int arity;
-    struct ex_iterator *child[2];
-    double value;
-    char symbol;
-    bool all;
-    bool root;
+    int volume;                   // the number of nodes in the expression tree, i.e. the size of the expression
+    int symbol_index;             // during iterator, indicates the offset the symbol array or switch-statement
+    int spread_index;             // during iterator, indicates how total volume is spread among both children of binary expression
+    int arity;                    // the arity of the operator, 0 for constant, 1 for unary operator, 2 for binary operator
+    struct ex_iterator *child[2]; // sub-expressions within this expression
+    double value;                 // the floating-point approximation of this expression
+    char symbol;                  // a single char representing the mathematical function or constant
+    bool all;                     // during iteration, indicates if duplicate expressions should be included
+    bool root;                    // indicates that this node is an empty root node, which child[0] the expression tree
 } ex_iterator;
 
 void ex_init_in(int volume, ex_iterator *iter, bool all, bool root)
@@ -166,6 +175,7 @@ bool ex_is_product_of_ln_below(ex_iterator *iter, double value)
     return false;
 }
 
+// Sub-function of ex_next handling constants, e.g. 1, 2, 3, 5, E, PI
 bool ex_eval_primitive(ex_iterator *iter)
 {
     if (iter->symbol_index++ != primitive_max)
@@ -178,7 +188,7 @@ bool ex_eval_primitive(ex_iterator *iter)
     return false;
 }
 
-int ex_is_normal(double value) 
+int ex_is_normal(double value)
 {
     return isnormal(value) && ((value > 1e-20 && value < 1e20) || (value < -1e-20 && value > -1e20));
 }
@@ -188,6 +198,7 @@ int ex_is_primitive(char symbol)
     return symbol == '1' || symbol == '2' || symbol == '3' || symbol == '5'; // || symbol == 'p' || symbol == 'e';
 }
 
+// Sub-function of ex_next handling unary functions, e.g. negation, log, cos
 bool ex_eval_unary(ex_iterator *iter)
 {
     ex_iterator *child = iter->child[0];
@@ -266,6 +277,7 @@ int ex_compare(ex_iterator *iter0, ex_iterator *iter1)
     return 0;
 }
 
+// Sub-function of ex_next handling binary operators, e.g. +, *, /, pow, and root
 bool ex_eval_binary(ex_iterator *iter)
 {
     ex_iterator *child0 = iter->child[0];
@@ -421,6 +433,7 @@ bool ex_eval_binary(ex_iterator *iter)
     return false;
 }
 
+// Update this iterator tree to the next expression.
 bool ex_next(ex_iterator *iter)
 {
     if (iter->root)

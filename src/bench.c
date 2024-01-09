@@ -3,6 +3,10 @@
 
 #include "iterator.h"
 
+// Performance benchmark for iterator - Loops over the iterator and logs time
+// (clock) elapsed, grouped by expression size (volume). It includes average
+// iteration time, which is a good indicator for the computation efficiency of
+// the iterator.
 int main()
 {
     ex_iterator stack[100];

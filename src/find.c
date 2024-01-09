@@ -6,6 +6,7 @@
 #include <emscripten.h>
 #endif
 
+// Display a matching expression.
 void report(ex_iterator *iter, double value, int size)
 {
 #ifdef __EMSCRIPTEN__
@@ -19,6 +20,7 @@ void report(ex_iterator *iter, double value, int size)
 #endif
 }
 
+// Iterate over the next block of expressions to find a match.
 int next(char *target_string, ex_iterator *stack, size_t max)
 {
     char *dotat = strchr(target_string, '.');
@@ -52,6 +54,8 @@ int next(char *target_string, ex_iterator *stack, size_t max)
     return 0;
 }
 
+// Takes input decimal value and iterates over all expressions to find potential
+// matches.
 #ifndef __EMSCRIPTEN__
 int main(int argc, char *argv[])
 {
