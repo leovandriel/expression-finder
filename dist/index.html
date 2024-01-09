@@ -48,7 +48,7 @@
       let count = 0
       let busy = ''
       Module.onRuntimeInitialized = () => {
-        next = Module.cwrap('next', 'number', ['string', 'number'])
+        next = Module.cwrap('next', 'number', ['string', 'number', 'number'])
       }
       function info(text) {
         const element = document.getElementById('info')
@@ -117,7 +117,7 @@
         let mark = ++index
         function loop() {
           if (mark == index) {
-            if (next(target, dataHeap.byteOffset, max)) {
+            if (next(target, dataHeap.byteOffset, max, false)) {
               setState('')
             } else {
               count += max

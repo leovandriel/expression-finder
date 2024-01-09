@@ -21,7 +21,7 @@ void report(ex_iterator *iter, double value, int size)
 }
 
 // Iterate over the next block of expressions to find a match.
-int next(char *target_string, ex_iterator *stack, size_t max)
+int next(char *target_string, ex_iterator *stack, size_t max, bool all)
 {
     char *dotat = strchr(target_string, '.');
     int decimals = dotat ? strlen(target_string) - (dotat - target_string) - 1 : 1;
@@ -36,7 +36,7 @@ int next(char *target_string, ex_iterator *stack, size_t max)
     long long int round_target = llround(target_value * round_factor);
     if (!stack->root)
     {
-        ex_init(stack, false);
+        ex_init(stack, all);
     }
     for (size_t count = 0; count < max && ex_next(stack); count++)
     {
@@ -60,11 +60,12 @@ int next(char *target_string, ex_iterator *stack, size_t max)
 int main(int argc, char *argv[])
 {
     char *target = argc > 1 ? argv[1] : "1.6180339";
+    int all = argc > 2 ? strcmp(argv[2], "all") == 0 : false;
     printf("target: %s\n", target);
     ex_iterator stack[100] = {};
     for (size_t count = 0;; count++)
     {
-        next(target, stack, 1000000);
+        next(target, stack, 1000000, all);
         printf(" %luM (%d)\r", count, stack->volume);
         fflush(stdout);
     }
