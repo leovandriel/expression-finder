@@ -8,11 +8,11 @@
 // can be used to find inefficiencies in the iterator.
 int main()
 {
-    int size = 12;
+    int max = 12;
     ex_iterator stack[100];
     char key[100];
     char expression[100];
-    for (ex_init(stack); stack->volume < size && ex_next(stack);)
+    for (ex_init(stack); stack->size <= max && ex_next(stack);)
     {
         if (!isnormal(stack->value))
         {

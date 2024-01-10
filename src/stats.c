@@ -4,31 +4,29 @@
 #include "util.h"
 
 // Counting benchmark for iterator - Loops over the iterator and logs number of
-// expressions, grouped by expression size (volume). It makes distinction
+// expressions, grouped by expression size. It makes distinction
 // between iterating over all possible expressions (all), and without duplicates
 // (opt) expressions.
 //
 // NOTE: opt unique grows around 7^size/9, with around 10M/second
 int main()
 {
-    int size = 9;
+    int max = 8;
     ex_iterator stack[100];
     ht_table table;
-    bool all;
     char key[100];
-    for (int i = 0; i < 2; i++)
+    for (int all = 0; all < 2; all++)
     {
-        all = !i;
         const char *type = all ? "all" : "opt";
         ht_init(&table, 1000000);
         size_t last_table_count = 0;
         size_t last_iterations = 1;
         size_t last_unique = 1;
         size_t total = 0;
-        for (int i = 0; i < size; i++)
+        for (int size = 1; size <= max; size++)
         {
             size_t count = 0;
-            for (ex_init(stack); ex_next_volume_all(stack, i, all);)
+            for (ex_init(stack); ex_next_size_all(stack, size, all);)
             {
                 ex_double_str(key, stack->value, 9);
                 if (!ht_get(&table, key))
@@ -37,8 +35,8 @@ int main()
                 }
                 count++;
             }
-            printf("%s, size: %i iterations: %lu (x%.1f)\n", type, i + 1, count, 1. * count / last_iterations);
-            printf("%s, size: %i unique: %lu (%lu%%) (x%.1f)\n", type, i + 1, table.count - last_table_count, 100 * (table.count - last_table_count) / count, 1. * (table.count - last_table_count) / last_unique);
+            printf("%s, size: %i iterations: %lu (x%.1f)\n", type, size, count, 1. * count / last_iterations);
+            printf("%s, size: %i unique: %lu (%lu%%) (x%.1f)\n", type, size, table.count - last_table_count, 100 * (table.count - last_table_count) / count, 1. * (table.count - last_table_count) / last_unique);
             last_iterations = count;
             last_unique = table.count - last_table_count;
             last_table_count = table.count;

@@ -46,7 +46,7 @@ int next(char *target_string, ex_iterator *stack, size_t max, bool all)
             double scaled = stack->value * round_factor;
             if (round_target == (long long int)round(scaled) || round_target == (long long int)trunc(scaled))
             {
-                report(stack, stack->value, stack->volume + 1);
+                report(stack, stack->value, stack->size);
                 return 1;
             }
         }
@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
     for (size_t count = 0;; count++)
     {
         next(target, stack, 1000000, all);
-        printf(" %luM (%d)\r", count, stack->volume);
+        printf(" %luM (%d)\r", count, stack->size);
         fflush(stdout);
     }
     return 0;

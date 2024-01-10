@@ -300,7 +300,7 @@ int ex_iterator_parse_in(char *string, int *index, ex_iterator *iter)
                 iter->value = M_PI;
                 break;
             }
-            iter->volume = 1;
+            iter->size = 1;
             iter->arity = 0;
             size = 1;
         }
@@ -324,7 +324,7 @@ int ex_iterator_parse_in(char *string, int *index, ex_iterator *iter)
                 iter->value = cos(child->value);
                 break;
             }
-            iter->volume = child->volume + 1;
+            iter->size = child->size + 1;
             iter->arity = 1;
             size = s + 1;
         }
@@ -376,7 +376,7 @@ int ex_iterator_parse_in(char *string, int *index, ex_iterator *iter)
             iter->value = pow(child0->value, 1. / child1->value);
             break;
         }
-        iter->volume = child0->volume + child1->volume + 1;
+        iter->size = child0->size + child1->size + 1;
         iter->arity = 2;
         iter->symbol = symbol;
         iter->child[0] = child0;
