@@ -267,6 +267,7 @@ int ex_iterator_parse_in(char *string, int *index, ex_iterator *iter)
         if (string[*index] != ')')
         {
             printf("ERROR: expected ) at %i in %s\n", *index, string);
+            return -1;
         }
         (*index)++;
         size = s;
@@ -307,10 +308,29 @@ int ex_iterator_parse_in(char *string, int *index, ex_iterator *iter)
         else if (strchr("-lc", symbol) != NULL)
         {
             *index += symbol_length;
-            int s = ex_iterator_parse_in(string, index, iter + 1);
+            if (strchr("lc", symbol) != NULL)
+            {
+                if (string[*index] != '(')
+                {
+                    printf("ERROR: expected ( at %i in %s\n", *index, string);
+                    return -1;
+                }
+                (*index)++;
+            }
+            child = iter + 1;
+            int s = ex_iterator_parse_in(string, index, child);
             if (s < 0)
             {
                 return -1;
+            }
+            if (strchr("lc", symbol) != NULL)
+            {
+                if (string[*index] != ')')
+                {
+                    printf("ERROR: expected ) at %i in %s\n", *index, string);
+                    return -1;
+                }
+                (*index)++;
             }
             switch (symbol)
             {
