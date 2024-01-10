@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
     int decimals = argc > 2 ? strtoul(argv[2], NULL, 10) : 100;
     int prec = round(decimals * log(10) / log(2));
     ex_iterator stack[100];
-    if (ex_iterator_parse(input, stack) == NULL)
+    if (ex_iterator_parse(input, stack) < 0)
     {
         return -1;
     }

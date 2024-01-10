@@ -238,23 +238,38 @@ char ex_parse_symbol(char *string, int *length)
     return '?';
 }
 
-// Recursive sub-function of ex_iterator_parse
-ex_iterator *ex_iterator_parse_in(char *string, int *index, ex_iterator *iter)
+void ex_iterator_parse_memmove(ex_iterator *iter, int offset)
 {
-    ex_iterator *parent = iter;
+    if (iter->child[0] != NULL)
+    {
+        ex_iterator_parse_memmove(iter->child[0], offset);
+        iter->child[0] += offset;
+    }
+    if (iter->child[1] != NULL)
+    {
+        ex_iterator_parse_memmove(iter->child[1], offset);
+        iter->child[1] += offset;
+    }
+}
+
+// Recursive sub-function of ex_iterator_parse
+int ex_iterator_parse_in(char *string, int *index, ex_iterator *iter)
+{
+    int size = 0;
     if (string[*index] == '(')
     {
         (*index)++;
-        parent = ex_iterator_parse_in(string, index, iter);
-        if (parent == NULL)
+        int s = ex_iterator_parse_in(string, index, iter);
+        if (s < 0)
         {
-            return NULL;
+            return -1;
         }
         if (string[*index] != ')')
         {
             printf("ERROR: expected ) at %i in %s\n", *index, string);
         }
         (*index)++;
+        size = s;
     }
     else
     {
@@ -267,60 +282,62 @@ ex_iterator *ex_iterator_parse_in(char *string, int *index, ex_iterator *iter)
             switch (symbol)
             {
             case '1':
-                parent->value = 1;
+                iter->value = 1;
                 break;
             case '2':
-                parent->value = 2;
+                iter->value = 2;
                 break;
             case '3':
-                parent->value = 3;
+                iter->value = 3;
                 break;
             case '5':
-                parent->value = 5;
+                iter->value = 5;
                 break;
             case 'e':
-                parent->value = M_E;
+                iter->value = M_E;
                 break;
             case 'p':
-                parent->value = M_PI;
+                iter->value = M_PI;
                 break;
             }
-            parent->volume = 1;
-            parent->arity = 0;
+            iter->volume = 1;
+            iter->arity = 0;
+            size = 1;
         }
         else if (strchr("-lc", symbol) != NULL)
         {
             *index += symbol_length;
-            child = ex_iterator_parse_in(string, index, iter + 1);
-            if (child == NULL)
+            int s = ex_iterator_parse_in(string, index, iter + 1);
+            if (s < 0)
             {
-                return NULL;
+                return -1;
             }
             switch (symbol)
             {
             case '-':
-                parent->value = -child->value;
+                iter->value = -child->value;
                 break;
             case 'l':
-                parent->value = log(child->value);
+                iter->value = log(child->value);
                 break;
             case 'c':
-                parent->value = cos(child->value);
+                iter->value = cos(child->value);
                 break;
             }
-            parent->volume = child->volume + 1;
-            parent->arity = 1;
+            iter->volume = child->volume + 1;
+            iter->arity = 1;
+            size = s + 1;
         }
         else
         {
             printf("ERROR: unexpected symbol at %i in %s\n", *index, string);
-            return NULL;
+            return -1;
         }
-        parent->symbol = symbol;
-        parent->child[0] = child;
-        parent->child[1] = NULL;
-        parent->symbol_index = -1;
-        parent->spread_index = -1;
+        iter->symbol = symbol;
+        iter->child[0] = child;
+        iter->child[1] = NULL;
+        iter->symbol_index = -1;
+        iter->spread_index = -1;
     }
     if (string[*index] != ')' && string[*index] != '\0')
     {
@@ -329,55 +346,53 @@ ex_iterator *ex_iterator_parse_in(char *string, int *index, ex_iterator *iter)
         if (strchr("+*/^r", symbol) == NULL)
         {
             printf("ERROR: unexpected symbol at %i in %s\n", *index, string);
-            return NULL;
+            return -1;
         }
         *index += symbol_length;
-        ex_iterator *child0 = parent;
-        parent = iter + child0->volume;
-        ex_iterator *child1 = ex_iterator_parse_in(string, index, parent + 1);
-        if (child1 == NULL)
+        ex_iterator_parse_memmove(iter, 1);
+        memmove(iter + 1, iter, sizeof(ex_iterator) * size);
+        ex_iterator *child0 = iter + 1;
+        ex_iterator *child1 = iter + size + 1;
+        int s = ex_iterator_parse_in(string, index, child1);
+        if (s < 0)
         {
-            return NULL;
+            return -1;
         }
         switch (symbol)
         {
         case '+':
-            parent->value = child0->value + child1->value;
+            iter->value = child0->value + child1->value;
             break;
         case '*':
-            parent->value = child0->value * child1->value;
+            iter->value = child0->value * child1->value;
             break;
         case '/':
-            parent->value = child0->value / child1->value;
+            iter->value = child0->value / child1->value;
             break;
         case '^':
-            parent->value = pow(child0->value, child1->value);
+            iter->value = pow(child0->value, child1->value);
             break;
         case 'r':
-            parent->value = pow(child0->value, 1. / child1->value);
+            iter->value = pow(child0->value, 1. / child1->value);
             break;
         }
-        parent->volume = child0->volume + child1->volume + 1;
-        parent->arity = 2;
-        parent->symbol = symbol;
-        parent->child[0] = child0;
-        parent->child[1] = child1;
-        parent->symbol_index = -1;
-        parent->spread_index = -1;
+        iter->volume = child0->volume + child1->volume + 1;
+        iter->arity = 2;
+        iter->symbol = symbol;
+        iter->child[0] = child0;
+        iter->child[1] = child1;
+        iter->symbol_index = -1;
+        iter->spread_index = -1;
+        size += s + 1;
     }
-    return parent;
+    return size;
 }
 
 // Parse an expression string into an expression tree.
-ex_iterator *ex_iterator_parse(char *string, ex_iterator *iter)
+int ex_iterator_parse(char *string, ex_iterator *iter)
 {
     int index = 0;
-    ex_iterator *parsed = ex_iterator_parse_in(string, &index, iter);
-    if (parsed == NULL)
-    {
-        return NULL;
-    }
-    return parsed;
+    return ex_iterator_parse_in(string, &index, iter);
 }
 
 bool ex_equal_symbol(ex_iterator *a, ex_iterator *b)
