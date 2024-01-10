@@ -391,4 +391,47 @@ ex_iterator *ex_iterator_parse(char *string, ex_iterator *iter)
     return iter;
 }
 
+bool ex_equal_symbol(ex_iterator *a, ex_iterator *b)
+{
+    if (a == NULL || b == NULL)
+    {
+        return false;
+    }
+    if (a->root)
+    {
+        a = a->child[0];
+    }
+    if (b->root)
+    {
+        b = b->child[0];
+    }
+    if (a->symbol != b->symbol)
+    {
+        return false;
+    }
+    if (a->child[0] != NULL && b->child[0] != NULL)
+    {
+        if (!ex_equal_symbol(a->child[0], b->child[0]))
+        {
+            return false;
+        }
+    }
+    else if (a->child[0] != NULL || b->child[0] != NULL)
+    {
+        return false;
+    }
+    if (a->child[1] != NULL && b->child[1] != NULL)
+    {
+        if (!ex_equal_symbol(a->child[1], b->child[1]))
+        {
+            return false;
+        }
+    }
+    else if (a->child[1] != NULL || b->child[1] != NULL)
+    {
+        return false;
+    }
+    return true;
+}
+
 #endif // EX_UTIL_H
