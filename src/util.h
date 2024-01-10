@@ -75,10 +75,6 @@ char *ex_iterator_str_in(char *buffer, ex_iterator *iter)
 // Writes string representation of expression.
 void ex_iterator_str(char *buffer, ex_iterator *iter)
 {
-    if (iter->root)
-    {
-        iter = iter->child[0];
-    }
     *(ex_iterator_str_in(buffer, iter)) = '\0';
 }
 
@@ -326,7 +322,6 @@ ex_iterator *ex_iterator_parse_in(char *string, int *index, ex_iterator *iter)
         parent->symbol_index = -1;
         parent->spread_index = -1;
         parent->all = true;
-        parent->root = false;
     }
     if (string[*index] != ')' && string[*index] != '\0')
     {
@@ -371,7 +366,6 @@ ex_iterator *ex_iterator_parse_in(char *string, int *index, ex_iterator *iter)
         parent->symbol_index = -1;
         parent->spread_index = -1;
         parent->all = true;
-        parent->root = false;
     }
     return parent;
 }
@@ -380,15 +374,12 @@ ex_iterator *ex_iterator_parse_in(char *string, int *index, ex_iterator *iter)
 ex_iterator *ex_iterator_parse(char *string, ex_iterator *iter)
 {
     int index = 0;
-    ex_iterator *child = ex_iterator_parse_in(string, &index, iter + 1);
-    if (child == NULL)
+    ex_iterator *parsed = ex_iterator_parse_in(string, &index, iter);
+    if (parsed == NULL)
     {
         return NULL;
     }
-    iter->root = true;
-    iter->child[0] = child;
-    iter->value = iter->child[0]->value;
-    return iter;
+    return parsed;
 }
 
 bool ex_equal_symbol(ex_iterator *a, ex_iterator *b)
@@ -396,14 +387,6 @@ bool ex_equal_symbol(ex_iterator *a, ex_iterator *b)
     if (a == NULL || b == NULL)
     {
         return false;
-    }
-    if (a->root)
-    {
-        a = a->child[0];
-    }
-    if (b->root)
-    {
-        b = b->child[0];
     }
     if (a->symbol != b->symbol)
     {

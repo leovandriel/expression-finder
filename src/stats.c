@@ -28,7 +28,7 @@ int main()
         for (int i = 0; i < size; i++)
         {
             size_t count = 0;
-            for (ex_init_size(i, stack, all); ex_next(stack);)
+            for (ex_init(stack, all); ex_next(stack, i);)
             {
                 ex_double_str(key, stack->value, 9);
                 if (!ht_get(&table, key))

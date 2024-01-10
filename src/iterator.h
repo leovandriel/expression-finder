@@ -33,10 +33,9 @@ typedef struct ex_iterator
     double value;                 // the floating-point approximation of this expression
     char symbol;                  // a single char representing the mathematical function or constant
     bool all;                     // during iteration, indicates if duplicate expressions should be included
-    bool root;                    // indicates that this node is an empty root node, which child[0] the expression tree
 } ex_iterator;
 
-void ex_init_in(int volume, ex_iterator *iter, bool all, bool root)
+void ex_init_in(int volume, ex_iterator *iter, bool all)
 {
     iter->volume = volume;
     iter->symbol_index = -1;
@@ -47,17 +46,11 @@ void ex_init_in(int volume, ex_iterator *iter, bool all, bool root)
     iter->value = 0.;
     iter->symbol = '?';
     iter->all = all;
-    iter->root = root;
 }
 
 void ex_init(ex_iterator *iter, bool all)
 {
-    ex_init_in(0, iter, all, true);
-}
-
-void ex_init_size(int volume, ex_iterator *iter, bool all)
-{
-    ex_init_in(volume, iter, all, false);
+    ex_init_in(0, iter, all);
 }
 
 bool ex_is_round(double value)
@@ -470,23 +463,9 @@ bool ex_eval_binary(ex_iterator *iter)
     return false;
 }
 
-// Update this iterator tree to the next expression.
-bool ex_next(ex_iterator *iter)
+
+bool ex_next_in(ex_iterator *iter)
 {
-    if (iter->root)
-    {
-        if (!iter->child[0])
-        {
-            iter->child[0] = iter + 1;
-            ex_init_size(iter->volume, iter->child[0], iter->all);
-        }
-        while (!ex_next(iter->child[0]))
-        {
-            ex_init_size(++iter->volume, iter->child[0], iter->all);
-        }
-        iter->value = iter->child[0]->value;
-        return true;
-    }
     // if iterating primitives
     if (iter->volume == 0)
     {
@@ -503,14 +482,14 @@ bool ex_next(ex_iterator *iter)
             if (!iter->child[0])
             {
                 iter->child[0] = iter + 1;
-                ex_init_size(iter->volume - 1, iter->child[0], iter->all);
-                ex_next(iter->child[0]);
+                ex_init_in(iter->volume - 1, iter->child[0], iter->all);
+                ex_next_in(iter->child[0]);
                 iter->symbol_index = -1;
             }
             // if we cycled through all unary operators, get next sub-tree
             if (iter->symbol_index == unary_max)
             {
-                bool has = ex_next(iter->child[0]);
+                bool has = ex_next_in(iter->child[0]);
                 if (!has)
                 {
                     if (iter->volume > 1)
@@ -547,23 +526,23 @@ bool ex_next(ex_iterator *iter)
             if (!iter->child[0])
             {
                 iter->child[0] = iter + 1;
-                ex_init_size(iter->spread_index - 1, iter->child[0], iter->all);
-                ex_next(iter->child[0]);
+                ex_init_in(iter->spread_index - 1, iter->child[0], iter->all);
+                ex_next_in(iter->child[0]);
             }
             // if second sub-tree is not yet initialized
             if (!iter->child[1])
             {
                 iter->child[1] = iter + (iter->spread_index + 1);
-                ex_init_size(iter->volume - (iter->spread_index + 1), iter->child[1], iter->all);
-                ex_next(iter->child[1]);
+                ex_init_in(iter->volume - (iter->spread_index + 1), iter->child[1], iter->all);
+                ex_next_in(iter->child[1]);
                 iter->symbol_index = -1;
             }
             if (iter->symbol_index == binary_max)
             {
-                bool has0 = ex_next(iter->child[1]);
+                bool has0 = ex_next_in(iter->child[1]);
                 if (!has0)
                 {
-                    bool has1 = ex_next(iter->child[0]);
+                    bool has1 = ex_next_in(iter->child[0]);
                     if (!has1)
                     {
                         iter->spread_index++;
@@ -590,6 +569,26 @@ bool ex_next(ex_iterator *iter)
             }
         }
     }
+}
+
+// Update this iterator tree to the next expression.
+bool ex_next(ex_iterator *iter)
+{
+    while (!ex_next_in(iter))
+    {
+        ex_init_in(++iter->volume, iter, iter->all);
+    }
+    return true;
+}
+
+// Update this iterator tree to the next expression, within the iterator volume.
+bool ex_next_volume(ex_iterator *iter, int volume)
+{
+    if (iter->volume != volume)
+    {
+        ex_init_in(volume, iter, iter->all);
+    }
+    return ex_next_in(iter);
 }
 
 #endif

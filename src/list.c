@@ -10,7 +10,7 @@ int main()
     for (int i = 0; i < 3; i++)
     {
         printf("size %i\n", i + 1);
-        for (ex_init_size(i, stack, false); ex_next(stack);)
+        for (ex_init(stack, false); ex_next_volume(stack, i);)
         {
             ex_iterator_str(expression, stack);
             printf("%s = %.20f\n", expression, stack->value);

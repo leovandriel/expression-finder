@@ -7,10 +7,6 @@
 
 void ex_arb_eval(arb_t result, ex_iterator *iter, int prec)
 {
-    if (iter->root)
-    {
-        iter = iter->child[0];
-    }
     if (iter->symbol == '1' || iter->symbol == '2' || iter->symbol == '3' || iter->symbol == '5')
     {
         arb_set_d(result, iter->value);

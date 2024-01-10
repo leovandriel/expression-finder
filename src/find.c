@@ -34,7 +34,7 @@ int next(char *target_string, ex_iterator *stack, size_t max, bool all)
     double round_factor = pow(10, decimals);
     double target_value = strtod(target_string, NULL);
     long long int round_target = llround(target_value * round_factor);
-    if (!stack->root)
+    if (stack->symbol == '\0')
     {
         ex_init(stack, all);
     }
@@ -46,7 +46,7 @@ int next(char *target_string, ex_iterator *stack, size_t max, bool all)
             double scaled = stack->value * round_factor;
             if (round_target == (long long int)round(scaled) || round_target == (long long int)trunc(scaled))
             {
-                report(stack->child[0], stack->value, stack->volume + 1);
+                report(stack, stack->value, stack->volume + 1);
                 return 1;
             }
         }
@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
     char *target = argc > 1 ? argv[1] : "1.6180339";
     int all = argc > 2 ? strcmp(argv[2], "all") == 0 : false;
     printf("target: %s\n", target);
-    ex_iterator stack[100] = {};
+    ex_iterator stack[100] = {0};
     for (size_t count = 0;; count++)
     {
         next(target, stack, 1000000, all);
