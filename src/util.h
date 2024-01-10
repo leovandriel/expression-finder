@@ -40,6 +40,9 @@ char *ex_iterator_str_in(char *buffer, ex_iterator *iter)
             strncpy(buffer, "cos(", 4);
             buffer += 4;
             break;
+        case 'n':
+            *(buffer++) = '-';
+            break;
         default:
             *(buffer++) = iter->symbol;
         }
@@ -106,13 +109,13 @@ char *latex(ex_iterator *iter, char *buffer, int prec)
             strncpy(buffer, "\\cos(", 5);
             buffer += 5;
             break;
-        case '-':
-            *(buffer++) = iter->symbol;
+        case 'n':
+            *(buffer++) = '-';
             break;
         default:
             *(buffer++) = '?';
         }
-        buffer = latex(iter->child[0], buffer, iter->symbol == '-' ? 5 : 0);
+        buffer = latex(iter->child[0], buffer, iter->symbol == 'n' ? 5 : 0);
         switch (iter->symbol)
         {
         case 'l':
@@ -129,7 +132,7 @@ char *latex(ex_iterator *iter, char *buffer, int prec)
             if (prec > 2)
                 *(buffer++) = '(';
             buffer = latex(iter->child[0], buffer, 2);
-            if (iter->child[1]->symbol != '-')
+            if (iter->child[1]->symbol != 'n')
             {
                 *(buffer++) = iter->symbol;
             }
@@ -199,7 +202,6 @@ char ex_parse_symbol(char *string, int *length)
     case '5':
     case 'e':
     case '+':
-    case '-':
     case '*':
     case '/':
         *length = 1;
@@ -211,6 +213,9 @@ char ex_parse_symbol(char *string, int *length)
             return 'p';
         }
         break;
+    case '-':
+        *length = 1;
+        return 'n';
     case 'l':
         if (strncmp(string, "ln", 2) == 0)
         {
@@ -305,7 +310,7 @@ int ex_iterator_parse_in(char *string, int *index, ex_iterator *iter)
             iter->arity = 0;
             size = 1;
         }
-        else if (strchr("-lc", symbol) != NULL)
+        else if (strchr("nlc", symbol) != NULL)
         {
             *index += symbol_length;
             if (strchr("lc", symbol) != NULL)
@@ -334,7 +339,7 @@ int ex_iterator_parse_in(char *string, int *index, ex_iterator *iter)
             }
             switch (symbol)
             {
-            case '-':
+            case 'n':
                 iter->value = -child->value;
                 break;
             case 'l':

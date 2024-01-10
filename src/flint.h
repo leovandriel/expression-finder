@@ -60,7 +60,7 @@ void ex_arb_eval(arb_t result, ex_iterator *iter, int prec)
         arb_inv(v, v, prec);
         arb_pow(result, result, v, prec);
     }
-    else if (iter->symbol == '-')
+    else if (iter->symbol == 'n')
     {
         ex_arb_eval(result, iter->child[0], prec);
         arb_neg_round(result, result, prec);
