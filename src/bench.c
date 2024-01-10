@@ -10,7 +10,7 @@
 int main()
 {
     ex_iterator stack[100];
-    ex_init(stack, false);
+    ex_init(stack);
     int last = 0;
     clock_t start = clock(); // so inaccurate
     for (size_t count = 0; ex_next(stack); count++)

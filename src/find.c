@@ -36,9 +36,9 @@ int next(char *target_string, ex_iterator *stack, size_t max, bool all)
     long long int round_target = llround(target_value * round_factor);
     if (stack->symbol == '\0')
     {
-        ex_init(stack, all);
+        ex_init(stack);
     }
-    for (size_t count = 0; count < max && ex_next(stack); count++)
+    for (size_t count = 0; count < max && ex_next_all(stack, all); count++)
     {
         double diff = fabs(target_value - stack->value);
         if (diff < max_diff)

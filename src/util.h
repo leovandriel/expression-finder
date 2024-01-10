@@ -321,7 +321,6 @@ ex_iterator *ex_iterator_parse_in(char *string, int *index, ex_iterator *iter)
         parent->child[1] = NULL;
         parent->symbol_index = -1;
         parent->spread_index = -1;
-        parent->all = true;
     }
     if (string[*index] != ')' && string[*index] != '\0')
     {
@@ -365,7 +364,6 @@ ex_iterator *ex_iterator_parse_in(char *string, int *index, ex_iterator *iter)
         parent->child[1] = child1;
         parent->symbol_index = -1;
         parent->spread_index = -1;
-        parent->all = true;
     }
     return parent;
 }

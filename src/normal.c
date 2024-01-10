@@ -12,7 +12,7 @@ int main()
     ex_iterator stack[100];
     char key[100];
     char expression[100];
-    for (ex_init(stack, false); stack->volume < size && ex_next(stack);)
+    for (ex_init(stack); stack->volume < size && ex_next(stack);)
     {
         if (!isnormal(stack->value))
         {

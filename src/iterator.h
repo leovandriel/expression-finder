@@ -32,10 +32,9 @@ typedef struct ex_iterator
     struct ex_iterator *child[2]; // sub-expressions within this expression
     double value;                 // the floating-point approximation of this expression
     char symbol;                  // a single char representing the mathematical function or constant
-    bool all;                     // during iteration, indicates if duplicate expressions should be included
 } ex_iterator;
 
-void ex_init_in(int volume, ex_iterator *iter, bool all)
+void ex_init_in(int volume, ex_iterator *iter)
 {
     iter->volume = volume;
     iter->symbol_index = -1;
@@ -45,12 +44,11 @@ void ex_init_in(int volume, ex_iterator *iter, bool all)
     iter->arity = 0;
     iter->value = 0.;
     iter->symbol = '?';
-    iter->all = all;
 }
 
-void ex_init(ex_iterator *iter, bool all)
+void ex_init(ex_iterator *iter)
 {
-    ex_init_in(0, iter, all);
+    ex_init_in(0, iter);
 }
 
 bool ex_is_round(double value)
@@ -215,7 +213,7 @@ int ex_is_primitive(char symbol)
 }
 
 // Sub-function of ex_next handling unary functions, e.g. negation, log, cos
-bool ex_eval_unary(ex_iterator *iter)
+bool ex_eval_unary(ex_iterator *iter, bool all)
 {
     ex_iterator *child = iter->child[0];
     double value = child->value;
@@ -223,7 +221,7 @@ bool ex_eval_unary(ex_iterator *iter)
     while (iter->symbol_index != unary_max) {
         switch (++iter->symbol_index) {
             case 0: { // negation
-                if ((iter->all || (
+                if ((all || (
                     symbol != '-' // --x = x
                     && (symbol != 'l' || (child->child[0]->symbol != '/')) // -log(x/y) = log(y/x)
                     && ((symbol != '+' && symbol != '*' && symbol != '/') || (
@@ -241,7 +239,7 @@ bool ex_eval_unary(ex_iterator *iter)
                 }
             } break;
             case 1: { // logarithm
-                if ((iter->all || (
+                if ((all || (
                     symbol != '^' && symbol != 'r' // log(x^y) = y*log(x), log(sqrt(x)) = log(x)/2
                     && !ex_is_product_of_value(iter, M_E) // log(e*x)
                     && (symbol != '/' || child->child[0]->value != 1.) // log(1/x) = -log(x)
@@ -249,7 +247,7 @@ bool ex_eval_unary(ex_iterator *iter)
                     && value > 0. && value != 1.
                 ) {
                     double value0 = log(value);
-                    if (iter->all || !ex_is_round(value0)) { // log(10) = 1
+                    if (all || !ex_is_round(value0)) { // log(10) = 1
                         iter->value = value0;
                         iter->symbol = 'l';
                         iter->arity = 1;
@@ -258,7 +256,7 @@ bool ex_eval_unary(ex_iterator *iter)
                 }
             } break;
             case 2: { // cosine
-                if ((iter->all || (
+                if ((all || (
                     value != M_PI / 3. // cos(pi/3) = 1/2
                     && (symbol != '/' || child->child[0]->symbol != 'p' || (child->child[1]->value != 4. && child->child[1]->value != 6.)) // cos(pi/4) = sqrt(2)/2
                 ))
@@ -298,7 +296,7 @@ int ex_compare(ex_iterator *iter0, ex_iterator *iter1)
 }
 
 // Sub-function of ex_next handling binary operators, e.g. +, *, /, pow, and root
-bool ex_eval_binary(ex_iterator *iter)
+bool ex_eval_binary(ex_iterator *iter, bool all)
 {
     ex_iterator *child0 = iter->child[0];
     ex_iterator *child1 = iter->child[1];
@@ -309,7 +307,7 @@ bool ex_eval_binary(ex_iterator *iter)
     while (iter->symbol_index != binary_max) {
         switch (++iter->symbol_index) {
             case 0: { // addition
-                if ((iter->all || (
+                if ((all || (
                     ex_compare(child0, child1) > 0 // 2+1 = 1+2
                     && (symbol0 != symbol1 || (symbol0 != '-' && symbol0 != 'l' && symbol0 != '+' // x+x = 2*x
                         && (symbol0 != '/' || symbol1 != '/' || child0->child[1]->value != child1->child[1]->value) // y/x+z/x = (y+z)/x
@@ -336,7 +334,7 @@ bool ex_eval_binary(ex_iterator *iter)
                     && value0 != -value1
                 ) {
                     double value = value0 + value1;
-                    if ((iter->all || (value1 == 125. || value1 == 216. || value1 == 225. || fabs(value1) == 243. || ex_is_primish(value))) && ex_is_normal(value)) {
+                    if ((all || (value1 == 125. || value1 == 216. || value1 == 225. || fabs(value1) == 243. || ex_is_primish(value))) && ex_is_normal(value)) {
                         iter->value = value;
                         iter->symbol = '+';
                         iter->arity = 2;
@@ -345,7 +343,7 @@ bool ex_eval_binary(ex_iterator *iter)
                 }
             } break;
             case 1: { // multiplication
-                if ((iter->all || (
+                if ((all || (
                     ex_compare(child0, child1) > 0 // 3*2 = 2*3
                     && symbol0 != '-' && symbol1 != '-' // -x*-y = x*y
                     && symbol0 != '/' && symbol1 != '/' // (x/y)*(z/w) = (x*z)/(y*w)
@@ -368,7 +366,7 @@ bool ex_eval_binary(ex_iterator *iter)
                 }
             } break;
             case 2: { // division
-                if ((iter->all || (
+                if ((all || (
                     value0 != value1 // x/x = 1
                     && symbol0 != '-' && symbol1 != '-' // -x/-y = x/y
                     && symbol0 != '/' && symbol1 != '/' // (x/y)/(z/w) = (x*w)/(y*z)
@@ -409,7 +407,7 @@ bool ex_eval_binary(ex_iterator *iter)
                 }
             } break;
             case 3: { // root
-                if ((iter->all || (
+                if ((all || (
                     symbol0 != '^' && symbol0 != 'r' // (x^y)^/z
                     && value0 != 1. // 1^/x = 1
                     && (symbol0 != '/' || child0->child[0]->value != 1.) // (1/x)^/y = x^/-y
@@ -419,7 +417,7 @@ bool ex_eval_binary(ex_iterator *iter)
                     && value1 < 1000 // x^/1000 ~= 1 
                 ) {
                     double value = value1 == 2. ? sqrt(value0) : pow(value0, 1. / value1);
-                    if ((iter->all || !ex_is_round(value)) && ex_is_normal(value)) { // 4^/2 = 2
+                    if ((all || !ex_is_round(value)) && ex_is_normal(value)) { // 4^/2 = 2
                         iter->value = value;
                         iter->symbol = 'r';
                         iter->arity = 2;
@@ -428,7 +426,7 @@ bool ex_eval_binary(ex_iterator *iter)
                 }
             } break;
             case 4: { // power
-                if ((iter->all || (
+                if ((all || (
                     symbol0 != '^' && symbol0 != 'r' // (x^y)^z = x^(y*z)
                     && (symbol0 != '/' || symbol1 != '-') // (x/y)^-z = (y/x)^z
                     && (symbol0 != 'e' || symbol1 != 'l') // e^log(x) = x
@@ -447,7 +445,7 @@ bool ex_eval_binary(ex_iterator *iter)
                     && value0 > 0. // -1^x = nan
                 ) {
                     double root = 1. / value1;
-                    if (iter->all || !ex_is_round(root) || root >= 1000 || root <= -1000) { // x^(1/2) = x^/2
+                    if (all || !ex_is_round(root) || root >= 1000 || root <= -1000) { // x^(1/2) = x^/2
                         double value = pow(value0, value1);
                         if (ex_is_normal(value)) {
                             iter->value = value;
@@ -464,7 +462,7 @@ bool ex_eval_binary(ex_iterator *iter)
 }
 
 
-bool ex_next_in(ex_iterator *iter)
+bool ex_next_in(ex_iterator *iter, bool all)
 {
     // if iterating primitives
     if (iter->volume == 0)
@@ -482,14 +480,14 @@ bool ex_next_in(ex_iterator *iter)
             if (!iter->child[0])
             {
                 iter->child[0] = iter + 1;
-                ex_init_in(iter->volume - 1, iter->child[0], iter->all);
-                ex_next_in(iter->child[0]);
+                ex_init_in(iter->volume - 1, iter->child[0]);
+                ex_next_in(iter->child[0], all);
                 iter->symbol_index = -1;
             }
             // if we cycled through all unary operators, get next sub-tree
             if (iter->symbol_index == unary_max)
             {
-                bool has = ex_next_in(iter->child[0]);
+                bool has = ex_next_in(iter->child[0], all);
                 if (!has)
                 {
                     if (iter->volume > 1)
@@ -511,7 +509,7 @@ bool ex_next_in(ex_iterator *iter)
                 iter->symbol_index = -1;
             }
             // if we found a unary symbol that operates on the sub-tree
-            if (ex_eval_unary(iter))
+            if (ex_eval_unary(iter, all))
             {
                 // iteration complete, value available
                 return true;
@@ -526,23 +524,23 @@ bool ex_next_in(ex_iterator *iter)
             if (!iter->child[0])
             {
                 iter->child[0] = iter + 1;
-                ex_init_in(iter->spread_index - 1, iter->child[0], iter->all);
-                ex_next_in(iter->child[0]);
+                ex_init_in(iter->spread_index - 1, iter->child[0]);
+                ex_next_in(iter->child[0], all);
             }
             // if second sub-tree is not yet initialized
             if (!iter->child[1])
             {
                 iter->child[1] = iter + (iter->spread_index + 1);
-                ex_init_in(iter->volume - (iter->spread_index + 1), iter->child[1], iter->all);
-                ex_next_in(iter->child[1]);
+                ex_init_in(iter->volume - (iter->spread_index + 1), iter->child[1]);
+                ex_next_in(iter->child[1], all);
                 iter->symbol_index = -1;
             }
             if (iter->symbol_index == binary_max)
             {
-                bool has0 = ex_next_in(iter->child[1]);
+                bool has0 = ex_next_in(iter->child[1], all);
                 if (!has0)
                 {
-                    bool has1 = ex_next_in(iter->child[0]);
+                    bool has1 = ex_next_in(iter->child[0], all);
                     if (!has1)
                     {
                         iter->spread_index++;
@@ -562,7 +560,7 @@ bool ex_next_in(ex_iterator *iter)
                 iter->symbol_index = -1;
             }
             // if we found a binary symbol that operates on the sub-tree
-            if (ex_eval_binary(iter))
+            if (ex_eval_binary(iter, all))
             {
                 // iteration complete, value available
                 return true;
@@ -572,23 +570,33 @@ bool ex_next_in(ex_iterator *iter)
 }
 
 // Update this iterator tree to the next expression.
-bool ex_next(ex_iterator *iter)
+bool ex_next_all(ex_iterator *iter, bool all)
 {
-    while (!ex_next_in(iter))
+    while (!ex_next_in(iter, all))
     {
-        ex_init_in(++iter->volume, iter, iter->all);
+        ex_init_in(++iter->volume, iter);
     }
     return true;
 }
 
 // Update this iterator tree to the next expression, within the iterator volume.
-bool ex_next_volume(ex_iterator *iter, int volume)
+bool ex_next_volume_all(ex_iterator *iter, int volume, bool all)
 {
     if (iter->volume != volume)
     {
-        ex_init_in(volume, iter, iter->all);
+        ex_init_in(volume, iter);
     }
-    return ex_next_in(iter);
+    return ex_next_in(iter, all);
+}
+
+bool ex_next(ex_iterator *iter)
+{
+    return ex_next_all(iter, false);
+}
+
+bool ex_next_volume(ex_iterator *iter, int volume)
+{
+    return ex_next_volume_all(iter, volume, false);
 }
 
 #endif

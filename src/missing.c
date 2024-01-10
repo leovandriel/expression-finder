@@ -15,7 +15,7 @@ int main()
     ht_init(&table, 2000000);
     char key[100];
     char expression[100];
-    for (ex_init(stack, true); stack->volume < size && ex_next(stack);)
+    for (ex_init(stack); stack->volume < size && ex_next_all(stack, true);)
     {
         ex_double_str(key, stack->value, 9);
         // ex_iterator_str(expression, stack);
@@ -27,7 +27,7 @@ int main()
             ht_set(&table, key, expression);
         }
     }
-    for (ex_init(stack, false); stack->volume < size + 3 && ex_next(stack);)
+    for (ex_init(stack); stack->volume < size + 3 && ex_next(stack);)
     {
         ex_double_str(key, stack->value, 9);
         // ex_iterator_str(expression, stack);
