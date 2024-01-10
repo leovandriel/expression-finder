@@ -150,7 +150,7 @@ bool ex_is_linear_of_symbol(ex_iterator *iter, char symbol)
     {
         return true;
     }
-    if (iter->symbol == '+' || iter->symbol == '*')
+    if (iter->symbol == '+' || iter->symbol == '-' || iter->symbol == '*')
     {
         if (ex_is_linear_of_symbol(iter->child[0], symbol) || ex_is_linear_of_symbol(iter->child[1], symbol))
         {
@@ -224,12 +224,12 @@ bool ex_eval_unary(ex_iterator *iter, bool all)
                 if ((all || (
                     symbol != 'n' // --x = x
                     && (symbol != 'l' || (child->child[0]->symbol != '/')) // -log(x/y) = log(y/x)
-                    && ((symbol != '+' && symbol != '*' && symbol != '/') || (
+                    && ((symbol != '+' && symbol != '-' && symbol != '*' && symbol != '/') || (
                         child->child[0]->symbol != 'n' && child->child[1]->symbol != 'n' // -(x-y) = y-x, -(-x*y) = x*y, -(-x/y) = x/y
                     ))
                     && (symbol != '/' || (
-                           (child->child[0]->symbol != '+' || (child->child[0]->child[0]->symbol != 'n' && child->child[0]->child[1]->symbol != 'n')) // -((x-y)/z) = (y-x)/z
-                        && (child->child[1]->symbol != '+' || (child->child[1]->child[0]->symbol != 'n' && child->child[1]->child[1]->symbol != 'n')) // -(z/(x-y)) = z/(y-x)
+                           ((child->child[0]->symbol != '+' && child->child[0]->symbol != '-') || (child->child[0]->child[0]->symbol != 'n' && child->child[0]->child[1]->symbol != 'n')) // -((x-y)/z) = (y-x)/z
+                        && ((child->child[1]->symbol != '+' && child->child[1]->symbol != '-') || (child->child[1]->child[0]->symbol != 'n' && child->child[1]->child[1]->symbol != 'n')) // -(z/(x-y)) = z/(y-x)
                     ))
                 ))) {
                     iter->value = -value;
@@ -309,7 +309,7 @@ bool ex_eval_binary(ex_iterator *iter, bool all)
             case 0: { // addition
                 if ((all || (
                     ex_compare(child0, child1) > 0 // 2+1 = 1+2
-                    && (symbol0 != symbol1 || (symbol0 != 'n' && symbol0 != 'l' && symbol0 != '+' // x+x = 2*x
+                    && (symbol0 != symbol1 || (symbol0 != 'n' && symbol0 != 'l' && symbol0 != '+' && symbol0 != '-' // x+x = 2*x
                         && (symbol0 != '/' || symbol1 != '/' || child0->child[1]->value != child1->child[1]->value) // y/x+z/x = (y+z)/x
                     ))
                     && (symbol0 != 'n' || child0->child[0]->symbol != 'l' || symbol1 != 'l') // -ln(x)+ln(y) = ln(y/x)
@@ -342,7 +342,23 @@ bool ex_eval_binary(ex_iterator *iter, bool all)
                     }
                 }
             } break;
-            case 1: { // multiplication
+            case 1: { // subtraction
+                if ((all || (
+                    true
+                ))
+                    && value0 != value1
+                ) {
+                    double value = value0 - value1;
+                    if (ex_is_normal(value))
+                    {
+                        iter->value = value;
+                        iter->symbol = '-';
+                        iter->arity = 2;
+                        return true;
+                    }
+                }
+            } break;
+            case 2: { // multiplication
                 if ((all || (
                     ex_compare(child0, child1) > 0 // 3*2 = 2*3
                     && symbol0 != 'n' && symbol1 != 'n' // -x*-y = x*y
@@ -365,14 +381,14 @@ bool ex_eval_binary(ex_iterator *iter, bool all)
                     }
                 }
             } break;
-            case 2: { // division
+            case 3: { // division
                 if ((all || (
                     value0 != value1 // x/x = 1
                     && symbol0 != 'n' && symbol1 != 'n' // -x/-y = x/y
                     && symbol0 != '/' && symbol1 != '/' // (x/y)/(z/w) = (x*w)/(y*z)
                     && (symbol1 != '*' || (value0 != child1->child[0]->value && value0 != child1->child[1]->value)) // x/(x*y) = 1/y
                     && (symbol0 != '*' || (value1 != child0->child[0]->value && value1 != child0->child[1]->value)) // (x*y)/x = y
-                    && (symbol0 != '+' || (value1 != child0->child[0]->value && value1 != child0->child[1]->value)) // (x+y)/x = 1+y/x
+                    && ((symbol0 != '+' && symbol0 != '-') || (value1 != child0->child[0]->value && value1 != child0->child[1]->value)) // (x+y)/x = 1+y/x
                     && ((symbol0 != '*' || symbol1 != '*') || (
                         child0->child[0]->value != child1->child[0]->value // (x*y)/(x*z) = y/z
                         && child0->child[1]->value != child1->child[0]->value // (y*x)/(x*z) = y/z
@@ -406,7 +422,7 @@ bool ex_eval_binary(ex_iterator *iter, bool all)
                     }
                 }
             } break;
-            case 3: { // root
+            case 4: { // root
                 if ((all || (
                     symbol0 != '^' && symbol0 != 'r' // (x^y)^/z
                     && value0 != 1. // 1^/x = 1
@@ -425,7 +441,7 @@ bool ex_eval_binary(ex_iterator *iter, bool all)
                     }
                 }
             } break;
-            case 4: { // power
+            case 5: { // power
                 if ((all || (
                     symbol0 != '^' && symbol0 != 'r' // (x^y)^z = x^(y*z)
                     && (symbol0 != '/' || symbol1 != 'n') // (x/y)^-z = (y/x)^z

@@ -129,13 +129,11 @@ char *latex(ex_iterator *iter, char *buffer, int prec)
         switch (iter->symbol)
         {
         case '+':
+        case '-':
             if (prec > 2)
                 *(buffer++) = '(';
             buffer = latex(iter->child[0], buffer, 2);
-            if (iter->child[1]->symbol != 'n')
-            {
-                *(buffer++) = iter->symbol;
-            }
+            *(buffer++) = iter->symbol;
             buffer = latex(iter->child[1], buffer, 2);
             if (prec > 2)
                 *(buffer++) = ')';
@@ -192,7 +190,7 @@ char *latex(ex_iterator *iter, char *buffer, int prec)
 }
 
 // Parse operator string representation to char code.
-char ex_parse_symbol(char *string, int *length)
+char ex_parse_symbol_nonbinary(char *string, int *length)
 {
     switch (*string)
     {
@@ -201,9 +199,6 @@ char ex_parse_symbol(char *string, int *length)
     case '3':
     case '5':
     case 'e':
-    case '+':
-    case '*':
-    case '/':
         *length = 1;
         return *string;
     case 'p':
@@ -223,6 +218,29 @@ char ex_parse_symbol(char *string, int *length)
             return 'l';
         }
         break;
+    case 'c':
+        if (strncmp(string, "cos", 3) == 0)
+        {
+            *length = 3;
+            return 'c';
+        }
+        break;
+    }
+    *length = 0;
+    return '?';
+}
+
+// Parse operator string representation to char code.
+char ex_parse_symbol_binary(char *string, int *length)
+{
+    switch (*string)
+    {
+    case '+':
+    case '-':
+    case '*':
+    case '/':
+        *length = 1;
+        return *string;
     case '^':
         if (strncmp(string, "^/", 2) == 0)
         {
@@ -231,13 +249,6 @@ char ex_parse_symbol(char *string, int *length)
         }
         *length = 1;
         return '^';
-    case 'c':
-        if (strncmp(string, "cos", 3) == 0)
-        {
-            *length = 3;
-            return 'c';
-        }
-        break;
     }
     *length = 0;
     return '?';
@@ -280,7 +291,7 @@ int ex_iterator_parse_in(char *string, int *index, ex_iterator *iter)
     else
     {
         int symbol_length = 0;
-        char symbol = ex_parse_symbol(string + *index, &symbol_length);
+        char symbol = ex_parse_symbol_nonbinary(string + *index, &symbol_length);
         ex_iterator *child = NULL;
         if (strchr("1235ep", symbol) != NULL)
         {
@@ -367,8 +378,8 @@ int ex_iterator_parse_in(char *string, int *index, ex_iterator *iter)
     if (string[*index] != ')' && string[*index] != '\0')
     {
         int symbol_length = 0;
-        char symbol = ex_parse_symbol(string + *index, &symbol_length);
-        if (strchr("+*/^r", symbol) == NULL)
+        char symbol = ex_parse_symbol_binary(string + *index, &symbol_length);
+        if (strchr("+-*/^r", symbol) == NULL)
         {
             printf("ERROR: unexpected symbol at %i in %s\n", *index, string);
             return -1;
@@ -387,6 +398,9 @@ int ex_iterator_parse_in(char *string, int *index, ex_iterator *iter)
         {
         case '+':
             iter->value = child0->value + child1->value;
+            break;
+        case '-':
+            iter->value = child0->value - child1->value;
             break;
         case '*':
             iter->value = child0->value * child1->value;

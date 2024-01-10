@@ -27,6 +27,14 @@ void ex_arb_eval(arb_t result, ex_iterator *iter, int prec)
         ex_arb_eval(v, iter->child[1], prec);
         arb_add(result, result, v, prec);
     }
+    else if (iter->symbol == '-')
+    {
+        arb_t v;
+        arb_init(v);
+        ex_arb_eval(result, iter->child[0], prec);
+        ex_arb_eval(v, iter->child[1], prec);
+        arb_sub(result, result, v, prec);
+    }
     else if (iter->symbol == '*')
     {
         arb_t v;
