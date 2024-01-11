@@ -85,7 +85,11 @@ void ex_iterator_str(char *buffer, ex_iterator *iter)
 char *latex(ex_iterator *iter, char *buffer, int prec)
 {
     *(buffer++) = ' ';
-    if (iter->arity == 0)
+    if (round(iter->value) == iter->value)
+    {
+        buffer += sprintf(buffer, "%d", (int)iter->value);
+    }
+    else if (iter->arity == 0)
     {
         switch (iter->symbol)
         {
