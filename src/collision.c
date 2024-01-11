@@ -15,19 +15,22 @@ int main()
     size_t count = 0;
     char key[100];
     char expression[100];
-    for (ex_init(stack); stack->size <= max && ex_next(stack);)
-    {
-        ex_double_str(key, stack->value, 9);
-        char *value = ht_get(&table, key);
-        ex_iterator_str(expression, stack);
-        if (value)
+    for (int size = 1; size <= max; size++) {
+        printf("size: %d\n", size);
+        for (ex_init(stack); ex_next_size(stack, size);)
         {
-            printf("collision: %s = %s = %s\n", expression, value, key);
-            count++;
-        }
-        else
-        {
-            ht_set(&table, key, expression);
+            ex_double_str(key, stack->value, 9);
+            char *value = ht_get(&table, key);
+            ex_iterator_str(expression, stack);
+            if (value)
+            {
+                printf("collision: %s = %s = %s\n", expression, value, key);
+                count++;
+            }
+            else
+            {
+                ht_set(&table, key, expression);
+            }
         }
     }
     printf("%lu collisions\n", count);

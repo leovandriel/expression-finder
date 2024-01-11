@@ -34,15 +34,15 @@ int main(int argc, char *argv[])
         {
             report(stack_b, "needle ");
         }
-        if (ex_equal_symbol(stack_a->child[0], stack_b))
+        else if (ex_equal_symbol(stack_a->child[0], stack_b))
         {
             report(stack_b, "child-0");
         }
-        if (ex_equal_symbol(stack_a->child[1], stack_b))
+        else if (ex_equal_symbol(stack_a->child[1], stack_b))
         {
             report(stack_b, "child-1");
         }
-        if (!all && (fabs(stack_a->value - stack_b->value) < 1e-12))
+        else if (!all && (fabs(stack_a->value - stack_b->value) < 1e-12))
         {
             report(stack_b, "value  ");
         }
