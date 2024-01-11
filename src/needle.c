@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
     printf("searching for %s = %s\n", expression, key);
     int max = 12;
     ex_iterator stack_b[100];
-    for (ex_init(stack_b); stack_b->size <= max && ex_next(stack_b);)
+    for (ex_init(stack_b); ex_next_all(stack_b, all) && stack_b->size <= max;)
     {
         if (ex_equal_symbol(stack_a, stack_b))
         {
