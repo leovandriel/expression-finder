@@ -47,8 +47,7 @@ ht_entry *ht_next(ht_iterator *iter)
 			return iter->entry;
 		}
 	}
-	ht_table *table = iter->table;
-	while (++iter->index < table->dsize)
+	for (ht_table *table = iter->table; ++iter->index < table->dsize;)
 	{
 		iter->entry = table->data[iter->index];
 		if (iter->entry)
@@ -73,8 +72,7 @@ void ht_free(ht_table *table)
 {
 	for (size_t i = 0; i < table->dsize; i++)
 	{
-		ht_entry *entry = table->data[i];
-		while (entry)
+		for (ht_entry *entry = table->data[i]; entry;)
 		{
 			free(entry->key);
 			free(entry->value);
@@ -199,6 +197,17 @@ void ht_del(ht_table *table, char *key)
 		free(entry->key);
 		free(entry->value);
 		free(entry);
+	}
+}
+
+void ht_dump(ht_table *table)
+{
+	for (size_t i = 0; i < table->dsize; i++)
+	{
+		for (ht_entry *entry = table->data[i]; entry; entry = entry->next)
+		{
+			printf("%s = %s\n", entry->key, entry->value);
+		}
 	}
 }
 
